@@ -361,7 +361,7 @@ class Scene {
         wave: wave.trim(),
       };
     };
-    const { total, times, progress } = timeline(hold, dur, 16, easeInOut);
+    const { total, times, progress } = timeline(hold, dur, 10, easeInOut);
     const angles = progress.map((k) => from + (to - from) * k);
     const shapes = angles.map(shape);
     const last = shapes[shapes.length - 1];
@@ -387,11 +387,14 @@ class Scene {
         times,
         total,
       )}</polygon>` +
+      // The flute wave is too fine to see while the flap moves; animating its path would
+      // weigh more than everything else together, so it simply appears once the flap stops.
       `<path d="${last.wave}" fill="none" stroke="${PAL.wave}" stroke-width=".9" stroke-linejoin="round">${smil(
-        'd',
-        shapes.map((x) => x.wave),
-        times,
+        'visibility',
+        ['hidden', 'visible'],
+        [0, 1],
         total,
+        'discrete',
       )}</path>`;
     if (!layer) return this.raw(body);
     const crossing = times[angles.findIndex((deg) => deg >= 0)];
