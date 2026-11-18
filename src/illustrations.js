@@ -899,6 +899,27 @@ const scenes = {
     s.openBox(540, 90, 50, 160, 130, 110, { back: 12, front: 66 });
     return s.svg({ aspect: 16 / 10 });
   },
+  // Inline version for the About page: the same composition, assembled like the hero.
+  aboutLive() {
+    const s = new Scene();
+    s.raw('<animate id="hxGo" attributeName="opacity" values="1;1" dur="0.1s" begin="indefinite"/>');
+    s.begin('hx hx-pod hx-1');
+    s.podium(0, 0, 0, 760, 300, 50);
+    s.end();
+    s.begin('hx hx-box hx-2');
+    s.closedBox(30, 40, 50, 200, 160, 220, { seam: true, tape: true, tapeAt: 1.15 });
+    s.end();
+    s.begin('hx hx-box hx-3');
+    s.closedBox(280, 60, 50, 170, 140, 130, { lid: 30, handle: true });
+    s.end();
+    s.begin('hx hx-box hx-4');
+    s.closedBox(300, 80, 180, 120, 100, 80, { seam: true });
+    s.end();
+    s.begin('hx hx-box hx-5');
+    s.openBoxAnimated(540, 90, 50, 160, 130, 110, { back: 12, front: 66, hold: 1.7 });
+    s.end();
+    return s.svg({ aspect: 16 / 10, grain: false, idPrefix: 'ab' });
+  },
 };
 
 module.exports = { scenes, MARK_PATHS };

@@ -4013,3 +4013,11 @@ html.menu-open .site-header {
   transform: translateY(-100%);
   box-shadow: none;
 }
+
+/* About: the composition is inline so it can be assembled like the hero */
+.about-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}

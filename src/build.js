@@ -994,7 +994,7 @@ function pageAbout(t) {
       ${a.paragraphs.map((p, i) => `<p${i === 0 ? ' class="lead"' : ''}>${esc(p)}</p>`).join('')}
       <div class="btn-row"><a class="btn btn-primary" href="${href(lang, 'request')}" data-track="cta" data-cta="about">${esc(t.cta.primary)}${I.arrow}</a></div>
     </div>
-    <figure class="about-figure">${img('about', a.composeAlt)}<figcaption class="illus-caption">${esc(t.illustrationLabel)}</figcaption></figure>
+    <figure class="about-figure">${scenes.aboutLive().replace('<svg ', `<svg class="about-svg" aria-label="${esc(a.composeAlt)}" `)}<figcaption class="illus-caption">${esc(t.illustrationLabel)}</figcaption></figure>
   </div>
 </section>
 <section class="section section-alt" aria-labelledby="ap-title">
