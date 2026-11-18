@@ -60,6 +60,11 @@ const rules = {
 module.exports = [
   { ignores: ['dist/**', 'dist-demo/**', 'data/**', 'preview/**', 'node_modules/**', '**/*.next/**'] },
   { files: ['**/*.js'], languageOptions: { ecmaVersion: 2022, sourceType: 'commonjs', globals: node }, rules },
+  // Callbacks passed to page.evaluate() run in the browser.
+  {
+    files: ['scripts/test-browser.js', 'scripts/render-static.js'],
+    languageOptions: { globals: { ...node, ...browser, getComputedStyle: 'readonly' } },
+  },
   {
     files: ['src/assets/app.js', 'src/admin/admin.js'],
     languageOptions: { ecmaVersion: 2020, sourceType: 'script', globals: browser },
