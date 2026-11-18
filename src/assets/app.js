@@ -247,6 +247,10 @@
     else mq.addListener(onMq);
   }
 
+  // --- hero: boxes get taped and opened (SMIL inside the inline SVG) ---
+  var heroStart = doc.getElementById('hxGo');
+  if (heroStart && typeof heroStart.beginElement === 'function' && !reduceMotion) heroStart.beginElement();
+
   // --- reveal on scroll ---
   if ('IntersectionObserver' in window && !reduceMotion) {
     var revealEls = $$('.reveal');

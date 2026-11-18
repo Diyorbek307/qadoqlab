@@ -150,7 +150,34 @@ class Scene {
     this.raw('</g>');
     if (o.seam) {
       const sy = y + d / 2;
-      if (o.tape) {
+      if (o.tape && o.tapeAt !== undefined) {
+        // Tape is pulled along the seam and pressed down the side.
+        const tw = Math.min(26, d * 0.13);
+        const tl = Math.min(70, h * 0.36);
+        const top = z + h;
+        const along = timeline(o.tapeAt, 0.42, 8, easeOut);
+        const down = timeline(o.tapeAt + 0.42, 0.24, 6, easeOut);
+        const strip = (k) =>
+          this.points([
+            [x, sy - tw, top],
+            [x + w * k, sy - tw, top],
+            [x + w * k, sy + tw, top],
+            [x, sy + tw, top],
+          ]);
+        const side = (k) =>
+          this.points([
+            [x + w, sy - tw, top],
+            [x + w, sy + tw, top],
+            [x + w, sy + tw, top - tl * k],
+            [x + w, sy - tw, top - tl * k],
+          ]);
+        this.raw(
+          `<polygon points="${strip(1)}" fill="${PAL.tape}" opacity=".92">${smil('points', along.progress.map(strip), along.times, along.total)}</polygon>`,
+        );
+        this.raw(
+          `<polygon points="${side(1)}" fill="#D2B486" opacity=".95">${smil('points', down.progress.map(side), down.times, down.total)}</polygon>`,
+        );
+      } else if (o.tape) {
         const tw = Math.min(26, d * 0.13);
         this.poly(
           [
@@ -307,6 +334,207 @@ class Scene {
     }
     this.raw('</g>');
   }
+  points(list) {
+    return list
+      .map((p) => this.P(p))
+      .map(([px, py]) => `${r(px)},${r(py)}`)
+      .join(' ');
+  }
+
+  // A flap that swings about the hinge a→b from angle `from` to `to` (degrees); dir(θ) is the
+  // unit vector from the hinge to the free edge. A back flap is drawn twice: in front of the box
+  // while it lies over the opening, behind it once it has passed vertical (layer 'front'/'back').
+  swingFlap({ a, b, dir, from, to, length, thick, waves, colors, hold, dur, layer = null }) {
+    const shape = (deg) => {
+      const u = dir((deg * Math.PI) / 180);
+      const p1 = add(a, mul(u, length));
+      const p2 = add(b, mul(u, length));
+      const t = mul(u, thick);
+      let wave = '';
+      for (let i = 0; i <= waves * 2; i++) {
+        const q = this.P(add(lerp(p1, p2, i / (waves * 2)), mul(t, i % 2 ? 0.82 : 0.18)));
+        wave += `${i ? 'L' : 'M'}${r(q[0])},${r(q[1])} `;
+      }
+      return {
+        flap: this.points([a, b, p2, p1]),
+        band: this.points([p1, p2, add(p2, t), add(p1, t)]),
+        wave: wave.trim(),
+      };
+    };
+    const { total, times, progress } = timeline(hold, dur, 16, easeInOut);
+    const angles = progress.map((k) => from + (to - from) * k);
+    const shapes = angles.map(shape);
+    const last = shapes[shapes.length - 1];
+    const stroke = `stroke="${PAL.edge}" stroke-width=".8" stroke-linejoin="round"`;
+    const body =
+      `<polygon points="${last.flap}" fill="${colors[1]}" ${stroke}>` +
+      smil(
+        'points',
+        shapes.map((x) => x.flap),
+        times,
+        total,
+      ) +
+      smil(
+        'fill',
+        progress.map((k) => mix(colors[0], colors[1], k)),
+        times,
+        total,
+      ) +
+      '</polygon>' +
+      `<polygon points="${last.band}" fill="${PAL.band}" ${stroke}>${smil(
+        'points',
+        shapes.map((x) => x.band),
+        times,
+        total,
+      )}</polygon>` +
+      `<path d="${last.wave}" fill="none" stroke="${PAL.wave}" stroke-width=".9" stroke-linejoin="round">${smil(
+        'd',
+        shapes.map((x) => x.wave),
+        times,
+        total,
+      )}</path>`;
+    if (!layer) return this.raw(body);
+    const crossing = times[angles.findIndex((deg) => deg >= 0)];
+    const states = layer === 'front' ? ['visible', 'hidden'] : ['hidden', 'visible'];
+    return this.raw(
+      `<g visibility="${states[1]}">${smil('visibility', states, [0, crossing], total, 'discrete')}${body}</g>`,
+    );
+  }
+
+  // Open box for the hero: it arrives closed and taped, the tape comes off and the flaps open,
+  // the long (major) pair first. Final geometry matches openBox().
+  openBoxAnimated(x, y, z, w, d, h, { back = 14, front = 64, hold = 1.35, dur = 0.8, minorDelay = 0.35 } = {}) {
+    const t = 6;
+    const top = z + h;
+    const length = d / 2;
+    const major = { hold, dur, waves: Math.round(w / 9) };
+    const minor = { hold: hold + minorDelay, dur, waves: Math.round(d / 9) };
+    const flaps = {
+      backMinor: {
+        ...minor,
+        a: [x, y, top],
+        b: [x, y + d, top],
+        dir: (th) => [-Math.sin(th), 0, Math.cos(th)],
+        to: back,
+        colors: [PAL.top[1], PAL.flapInner],
+      },
+      backMajor: {
+        ...major,
+        a: [x, y, top],
+        b: [x + w, y, top],
+        dir: (th) => [0, -Math.sin(th), Math.cos(th)],
+        to: back,
+        colors: [PAL.top[0], PAL.flapLit],
+      },
+      frontMinor: {
+        ...minor,
+        a: [x + w, y, top],
+        b: [x + w, y + d, top],
+        dir: (th) => [Math.sin(th), 0, Math.cos(th)],
+        to: front,
+        colors: [PAL.top[1], '#C9A06F'],
+      },
+      frontMajor: {
+        ...major,
+        a: [x, y + d, top],
+        b: [x + w, y + d, top],
+        dir: (th) => [0, Math.sin(th), Math.cos(th)],
+        to: front,
+        colors: [PAL.top[0], PAL.flapLit],
+      },
+    };
+    const swing = (flap, layer) => this.swingFlap({ ...flap, from: -90, length, thick: t, layer });
+    const quad = (pts, fill) => this.poly(pts, fill);
+
+    this.shadow(x, y, z, w, d);
+    swing(flaps.backMinor, 'back');
+    swing(flaps.backMajor, 'back');
+    quad(
+      [
+        [x, y, z],
+        [x + w, y, z],
+        [x + w, y + d, z],
+        [x, y + d, z],
+      ],
+      PAL.floor,
+    );
+    quad(
+      [
+        [x + t, y, z],
+        [x + t, y + d, z],
+        [x + t, y + d, top],
+        [x + t, y, top],
+      ],
+      PAL.innerLight,
+    );
+    quad(
+      [
+        [x, y + t, z],
+        [x + w, y + t, z],
+        [x + w, y + t, top],
+        [x, y + t, top],
+      ],
+      PAL.inner,
+    );
+    quad(
+      [
+        [x + t, y + t, z + 1],
+        [x + w, y + t, z + 1],
+        [x + w, y + d, z + 1],
+        [x + t, y + d, z + 1],
+      ],
+      'url(#gFloor)',
+    );
+    this.flute([x, y, top], [x, y + d, top], [t, 0, 0], Math.round(d / 9));
+    this.flute([x, y, top], [x + w, y, top], [0, t, 0], Math.round(w / 9));
+    quad(
+      [
+        [x, y + d, z],
+        [x + w, y + d, z],
+        [x + w, y + d, top],
+        [x, y + d, top],
+      ],
+      'url(#gL)',
+    );
+    quad(
+      [
+        [x + w, y, z],
+        [x + w, y + d, z],
+        [x + w, y + d, top],
+        [x + w, y, top],
+      ],
+      'url(#gR)',
+    );
+    this.flute([x, y + d - t, top], [x + w, y + d - t, top], [0, t, 0], Math.round(w / 9));
+    this.flute([x + w - t, y, top], [x + w - t, y + d, top], [t, 0, 0], Math.round(d / 9));
+    // Closing order of a real box: minors under majors.
+    swing(flaps.backMinor, 'front');
+    swing(flaps.frontMinor);
+    swing(flaps.backMajor, 'front');
+    swing(flaps.frontMajor);
+
+    // Tape over the seam: present on arrival, peeled off just before the flaps move.
+    const tw = Math.min(26, d * 0.13);
+    const sy = y + d / 2;
+    // It rolls up from the far end: the start edge slides along the seam until nothing is left.
+    const peel = timeline(hold - 0.45, 0.4, 8, easeInOut);
+    const tape = (k) => {
+      const from = x - 2 + (w + 4) * k;
+      return this.points([
+        [from, sy - tw, top],
+        [x + w + 2, sy - tw, top],
+        [x + w + 2, sy + tw, top],
+        [from, sy + tw, top],
+      ]);
+    };
+    this.raw(
+      `<polygon points="${tape(1)}" fill="#EAD3A8" stroke="rgba(120,84,40,.35)" stroke-width=".8" opacity="0">` +
+        smil('points', peel.progress.map(tape), peel.times, peel.total) +
+        smil('opacity', [1, 1, 0], [0, 0.97, 1], peel.total) +
+        '</polygon>',
+    );
+  }
+
   // Mailer box with the lid folded back.
   mailerOpen(x, y, z, w, d, h) {
     const t = 7;
@@ -493,6 +721,34 @@ class Scene {
   }
 }
 
+const easeInOut = (k) => (k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
+const easeOut = (k) => 1 - (1 - k) ** 3;
+const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const mix = (a, b, k) =>
+  `#${rgb(a)
+    .map((v, i) => Math.round(v + (rgb(b)[i] - v) * Math.min(Math.max(k, 0), 1)))
+    .map((v) => v.toString(16).padStart(2, '0'))
+    .join('')}`;
+
+// SMIL animation started by the hero's #hxGo trigger. Static attributes always hold the final
+// frame, so without JavaScript (or with reduced motion) the picture is simply complete.
+function smil(attr, values, times, total, calcMode = 'linear') {
+  const keyTimes = times.map((k) => Number(k.toFixed(4))).join(';');
+  return `<animate attributeName="${attr}" values="${values.join(';')}" keyTimes="${keyTimes}" dur="${total.toFixed(2)}s" begin="hxGo.begin" fill="freeze" calcMode="${calcMode}"/>`;
+}
+
+// Timeline for a move that waits `hold` seconds and then runs for `dur`, sampled in `frames` steps.
+function timeline(hold, dur, frames, ease) {
+  const total = hold + dur;
+  const times = [0];
+  const progress = [0];
+  for (let i = 0; i <= frames; i++) {
+    times.push((hold + (dur * i) / frames) / total);
+    progress.push(ease(i / frames));
+  }
+  return { total, times, progress };
+}
+
 const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
 const lerp = (a, b, s) => [a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s, a[2] + (b[2] - a[2]) * s];
@@ -519,14 +775,16 @@ const TEX = [
 const scenes = {
   hero() {
     const s = new Scene();
+    // Trigger for every SMIL animation in the hero; started from app.js unless motion is reduced.
+    s.raw('<animate id="hxGo" attributeName="opacity" values="1;1" dur="0.1s" begin="indefinite"/>');
     s.begin('hx hx-pod hx-1');
     s.podium(0, 0, 0, 520, 360, 70);
     s.end();
     s.begin('hx hx-box hx-2');
-    s.closedBox(40, 50, 70, 280, 210, 200, { seam: true, tape: true });
+    s.closedBox(40, 50, 70, 280, 210, 200, { seam: true, tape: true, tapeAt: 1.1 });
     s.end();
     s.begin('hx hx-box hx-4');
-    s.closedBox(90, 90, 270, 170, 130, 110, { seam: true, tape: true });
+    s.closedBox(90, 90, 270, 170, 130, 110, { seam: true, tape: true, tapeAt: 1.45 });
     s.end();
     s.begin('hx hx-box hx-3');
     s.closedBox(360, 80, 70, 130, 110, 90, { seam: true });
@@ -535,7 +793,7 @@ const scenes = {
     s.podium(320, 350, 0, 340, 280, 34);
     s.end();
     s.begin('hx hx-box hx-5');
-    s.openBox(365, 395, 34, 230, 175, 160, { back: 14, front: 64 });
+    s.openBoxAnimated(365, 395, 34, 230, 175, 160, { back: 14, front: 64 });
     s.end();
     s.begin('hx hx-box hx-6');
     s.closedBox(-40, 410, 0, 200, 140, 56, { mailerLip: 16 });
