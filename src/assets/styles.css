@@ -3810,3 +3810,38 @@ html:not(.js) .check-path {
 .nf-grid .lead {
   margin-top: 18px;
 }
+
+/* fields: a copper line runs along the bottom edge on focus */
+input.input:not([type='file']),
+textarea.input {
+  background-image: linear-gradient(var(--copper), var(--copper));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0 2px;
+  transition:
+    border-color 0.2s var(--ease),
+    box-shadow 0.25s var(--ease),
+    background-color 0.2s,
+    background-size 0.45s var(--ease-out);
+}
+input.input:not([type='file']):focus,
+textarea.input:focus {
+  background-size: 100% 2px;
+}
+
+/* footer: the name set large and faint, its letters rise in turn */
+.footer-mark {
+  overflow: hidden;
+  height: clamp(44px, 10.5vw, 160px);
+  user-select: none;
+  pointer-events: none;
+}
+.footer-mark .words {
+  display: flex;
+  justify-content: space-between;
+  font-size: clamp(60px, 15vw, 228px);
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: 0;
+  color: #ece4d4;
+}

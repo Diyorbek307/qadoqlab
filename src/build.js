@@ -265,6 +265,9 @@ function footer(t, altHref) {
     ${privacyReady() ? `<a href="${href(lang, 'privacy')}">${esc(t.nav.privacy)}</a>` : ''}
     <a class="footer-lang" href="${esc(altHref)}" hreflang="${other}" lang="${other}" data-lang-switch="${other}">${esc(dict[other].langName)}</a>
   </div>
+  <div class="container footer-mark" aria-hidden="true"><span class="words">${[...'QADOQLAB']
+    .map((ch) => `<span class="w"><span class="wi">${ch}</span></span>`)
+    .join('')}</span></div>
 </footer>`;
 }
 

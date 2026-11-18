@@ -309,6 +309,16 @@
         ro.observe(el);
       });
       html.classList.add('reveal-ready');
+      // Blocks at the very end of the page never cross the observer's shrunk bottom edge,
+      // so reaching the bottom shows whatever is still waiting.
+      var revealRest = function () {
+        if (window.innerHeight + window.scrollY < doc.documentElement.scrollHeight - 4) return;
+        revealEls.forEach(function (el) {
+          el.classList.add('is-in');
+        });
+        window.removeEventListener('scroll', revealRest);
+      };
+      window.addEventListener('scroll', revealRest, { passive: true });
     }
   }
 
