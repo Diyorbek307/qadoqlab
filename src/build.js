@@ -230,7 +230,7 @@ function header(t, current, altHref) {
     )
     .join('');
   return `<a class="skip-link" href="#main">${esc(t.a11y.skip)}</a>
-${DEMO ? `<div class="demo-banner" role="note">${esc(t.demoBanner)}</div>` : ''}
+${DEMO ? `<div class="demo-banner" role="region" aria-label="Demo">${esc(t.demoBanner)}</div>` : ''}
 <header class="site-header" data-header>
   <div class="container header-inner">
     <a class="logo" href="${href(lang, 'home')}" aria-label="${esc(t.a11y.home)}">${markSvg()}<span class="logo-word">QADOQLAB</span></a>
@@ -462,7 +462,7 @@ function businessList(t, { headingLevel = 3 } = {}) {
 }
 
 function foodNote(t) {
-  return `<aside class="note-card" aria-label="${esc(t.business.foodNoteTitle)}"><p><strong>${esc(t.business.foodNoteTitle)}.</strong> ${esc(t.business.foodNote)}</p></aside>`;
+  return `<div class="note-card" role="note"><p><strong>${esc(t.business.foodNoteTitle)}.</strong> ${esc(t.business.foodNote)}</p></div>`;
 }
 
 function businessSection(t) {
@@ -1036,14 +1036,14 @@ function pageRequest(t) {
 <section class="section section-tight" id="request-form">
   <div class="container form-layout form-layout-page">
     <div class="form-card">${requestForm(t, { id: 'rf' })}</div>
-    <aside class="form-aside">
+    <div class="form-aside">
       <h2 class="h3">${esc(t.steps.title)}</h2>
       <ol class="steps-compact">${t.steps.items.map((s) => `<li><span class="step-num">${s.n}</span><div><strong>${esc(s.t)}</strong><p>${esc(s.d)}</p></div></li>`).join('')}</ol>
       <div class="aside-card">
         <p>${fill(esc(t.form.filesByEmail), { email: `<a class="mail-link" href="${mailto(lang)}" data-track="email">${esc(EMAIL)}</a>` })}</p>
       </div>
       <p class="aside-link"><a class="link-arrow" href="${href(lang, 'home')}#wizard">${esc(t.cta.pick)}${I.arrow}</a></p>
-    </aside>
+    </div>
   </div>
 </section>`;
   return layout(
