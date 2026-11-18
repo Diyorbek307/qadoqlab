@@ -4001,3 +4001,15 @@ html.menu-open .site-header {
   stroke: var(--copper);
   transform: translateY(-4px) rotate(-6deg);
 }
+
+/* header hides while scrolling down, returns on scroll up */
+.site-header {
+  transition:
+    transform 0.4s var(--ease-out),
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.site-header.is-hidden {
+  transform: translateY(-100%);
+  box-shadow: none;
+}

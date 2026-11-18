@@ -169,10 +169,35 @@
   var header = $('[data-header]');
   var toggle = $('[data-menu-toggle]');
   var menu = $('[data-mobile-menu]');
+  // The header slides away while scrolling down and comes back on any scroll up. It stays
+  // put near the top, with the menu open, with focus inside it, and for reduced motion.
+  var lastY = window.scrollY;
+  var scrollTick = false;
   function onScroll() {
-    if (header) header.classList.toggle('is-scrolled', window.scrollY > 8);
+    if (scrollTick) return;
+    scrollTick = true;
+    requestAnimationFrame(function () {
+      scrollTick = false;
+      if (!header) return;
+      var y = window.scrollY;
+      header.classList.toggle('is-scrolled', y > 8);
+      if (y <= 480 || reduceMotion) {
+        header.classList.toggle('is-hidden', false);
+        lastY = y;
+        return;
+      }
+      if (Math.abs(y - lastY) < 6) return;
+      var busy = html.classList.contains('menu-open') || header.contains(doc.activeElement);
+      header.classList.toggle('is-hidden', y > lastY && !busy);
+      lastY = y;
+    });
   }
   window.addEventListener('scroll', onScroll, { passive: true });
+  if (header) {
+    header.addEventListener('focusin', function () {
+      header.classList.toggle('is-hidden', false);
+    });
+  }
   onScroll();
 
   var menuTimer = 0;
@@ -255,6 +280,7 @@
   if (navigator.clipboard && window.isSecureContext) {
     $$('[data-copy]').forEach(function (btn) {
       var label = btn.querySelector('.copy-label');
+      var status = btn.parentNode.querySelector('[data-copy-status]');
       var idle = label.textContent;
       var timer = 0;
       btn.hidden = false;
@@ -263,6 +289,7 @@
           clearTimeout(timer);
           btn.classList.add('is-done');
           label.textContent = btn.getAttribute('data-label-done');
+          if (status) status.textContent = btn.getAttribute('data-label-done');
           track('email_copy');
           timer = setTimeout(function () {
             btn.classList.toggle('is-done', false);
