@@ -253,7 +253,13 @@
 
   // --- reveal on scroll ---
   if ('IntersectionObserver' in window && !reduceMotion) {
-    var revealEls = $$('.reveal');
+    // Headings split into words get an index for the stagger.
+    $$('.words').forEach(function (heading) {
+      $$('.wi', heading).forEach(function (word, i) {
+        word.style.setProperty('--wi', Math.min(i, 12));
+      });
+    });
+    var revealEls = $$('.reveal, .words');
     if (revealEls.length) {
       var ro = new IntersectionObserver(
         function (entries) {
@@ -276,7 +282,7 @@
         var siblings = Array.prototype.filter.call(el.parentNode.children, function (c) {
           return c.classList.contains('reveal');
         });
-        el.style.setProperty('--d', Math.min(siblings.indexOf(el), 6));
+        if (siblings.length) el.style.setProperty('--d', Math.min(Math.max(siblings.indexOf(el), 0), 6));
         if (onScreen[i]) el.classList.add('is-in'); // already on screen: no animation
         ro.observe(el);
       });

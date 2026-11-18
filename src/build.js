@@ -49,6 +49,13 @@ const esc = (s) =>
     /[&<>"']/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
   );
+// Heading text split into words for the reveal animation; plain text without JS.
+const words = (text) =>
+  String(text ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => `<span class="w"><span class="wi">${esc(word)}</span></span>`)
+    .join(' ');
 const fill = (s, vars) => String(s).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
 const write = (rel, content) => {
   const file = path.join(OUT, rel);
@@ -379,7 +386,7 @@ function catalogSection(t) {
   <div class="container">
     <div class="section-head reveal">
       ${eyebrow(t.catalogSection.eyebrow)}
-      <h2 id="catalog-title">${esc(t.catalogSection.title)}</h2>
+      <h2 id="catalog-title" class="words">${words(t.catalogSection.title)}</h2>
       <p class="lead">${esc(t.catalogSection.lead)}</p>
     </div>
     ${
@@ -421,7 +428,7 @@ function businessSection(t) {
   <div class="container split">
     <div class="split-aside">
       ${eyebrow(t.business.eyebrow)}
-      <h2 id="business-title">${esc(t.business.title)}</h2>
+      <h2 id="business-title" class="words">${words(t.business.title)}</h2>
       <p class="lead">${esc(t.business.lead)}</p>
       ${foodNote(t)}
     </div>
@@ -437,7 +444,7 @@ function compareSection(t) {
     <div class="compare-card reveal">
       <div class="compare-head">
         ${eyebrow(t.compare.eyebrow)}
-        <h2 id="compare-title">${t.compare.titleLines.map((l) => `<span>${esc(l)}</span>`).join(' ')}</h2>
+        <h2 id="compare-title" class="words">${t.compare.titleLines.map((l) => `<span>${words(l)}</span>`).join(' ')}</h2>
       </div>
       <div class="compare-body">
         <p class="lead">${esc(t.compare.text)}</p>
@@ -456,7 +463,7 @@ function stepsSection(t, alt = false) {
   <div class="container">
     <div class="section-head reveal">
       ${eyebrow(t.steps.eyebrow)}
-      <h2 id="steps-title">${esc(t.steps.title)}</h2>
+      <h2 id="steps-title" class="words">${words(t.steps.title)}</h2>
     </div>
     <ol class="steps">
       ${t.steps.items.map((s) => `<li class="reveal"><span class="step-num">${s.n}</span><h3>${esc(s.t)}</h3><p>${esc(s.d)}</p></li>`).join('')}
@@ -470,7 +477,7 @@ function faqSection(t) {
   <div class="container split">
     <div class="split-aside">
       ${eyebrow(t.faq.eyebrow)}
-      <h2 id="faq-title">${esc(t.faq.title)}</h2>
+      <h2 id="faq-title" class="words">${words(t.faq.title)}</h2>
     </div>
     <div class="split-main faq">
       ${t.faq.items
@@ -489,7 +496,7 @@ function faqSection(t) {
 function finalCta(t) {
   return `<section class="final-cta" aria-labelledby="final-title">
   <div class="container final-inner reveal">
-    <h2 id="final-title">${esc(t.finalCta.title)}</h2>
+    <h2 id="final-title" class="words">${words(t.finalCta.title)}</h2>
     <div>
       <p>${esc(t.finalCta.text)}</p>
       <a class="btn btn-light btn-lg" href="${href(t.lang, 'request')}" data-track="cta" data-cta="final">${esc(t.cta.primary)}${I.arrow}</a>
@@ -662,7 +669,7 @@ function wizard(t) {
   <div class="container wizard-wrap">
     <div class="wizard-intro">
       ${eyebrow(w.eyebrow)}
-      <h2 id="wizard-title">${esc(w.title)}</h2>
+      <h2 id="wizard-title" class="words">${words(w.title)}</h2>
       <p class="lead">${esc(w.lead)}</p>
     </div>
     <div class="wizard-card">
@@ -829,7 +836,7 @@ function pageCategory(t, cat) {
 <section class="section section-alt" aria-labelledby="params-title">
   <div class="container split">
     <div class="split-aside">
-      <h2 id="params-title">${esc(cp.paramsTitle)}</h2>
+      <h2 id="params-title" class="words">${words(cp.paramsTitle)}</h2>
       <p class="muted">${esc(cp.paramsNote)}</p>
     </div>
     <ol class="params split-main">${cp.params.map((p, i) => `<li><span class="num">${String(i + 1).padStart(2, '0')}</span>${esc(p)}</li>`).join('')}</ol>
@@ -838,13 +845,13 @@ function pageCategory(t, cat) {
 <section class="section" id="request-form" aria-labelledby="pf-title">
   <div class="container form-layout">
     <div class="form-intro">
-      <h2 id="pf-title">${esc(cp.formTitle)}</h2>
+      <h2 id="pf-title" class="words">${words(cp.formTitle)}</h2>
       <p class="lead">${esc(cp.formLead)}</p>
     </div>
     <div class="form-card">${requestForm(t, { id: 'pf', presetType: cat.slug, compact: true })}</div>
   </div>
 </section>
-${related.length ? `<section class="section section-alt" aria-labelledby="related-title"><div class="container"><h2 id="related-title" class="section-title-sm">${esc(cp.relatedTitle)}</h2><div class="cat-grid cat-grid-3">${related.map((r) => catCard(t, r)).join('')}</div></div></section>` : ''}`;
+${related.length ? `<section class="section section-alt" aria-labelledby="related-title"><div class="container"><h2 id="related-title" class="section-title-sm words">${words(cp.relatedTitle)}</h2><div class="cat-grid cat-grid-3">${related.map((r) => catCard(t, r)).join('')}</div></div></section>` : ''}`;
   return layout(
     t,
     {
@@ -865,7 +872,7 @@ function pageBusiness(t) {
 <section class="section section-tight" aria-labelledby="biz-title">
   <div class="container split">
     <div class="split-aside">
-      <h2 id="biz-title">${esc(b.title)}</h2>
+      <h2 id="biz-title" class="words">${words(b.title)}</h2>
       <p class="lead">${esc(b.lead)}</p>
       ${foodNote(t)}
     </div>
@@ -916,7 +923,7 @@ function galleryBlock(t) {
     return `<figure class="gal-item"><img src="${esc(it.src)}" width="${it.width}" height="${it.height}" alt="${esc(it.alt[lang])}" loading="lazy" decoding="async">${it.caption?.[lang] || it.illustration ? `<figcaption>${esc(it.caption?.[lang] || '')}${it.illustration ? ` ${esc(t.illustrationLabel)}` : ''}</figcaption>` : ''}</figure>`;
   };
   return `<section class="section" aria-labelledby="gal-title"><div class="container">
-    <div class="section-head reveal">${eyebrow(t.gallery.eyebrow)}<h2 id="gal-title">${esc(t.gallery.title)}</h2></div>
+    <div class="section-head reveal">${eyebrow(t.gallery.eyebrow)}<h2 id="gal-title" class="words">${words(t.gallery.title)}</h2></div>
     ${sections.map(([k, items]) => `<div class="gal-group"><h3 class="mini-title">${esc(t.gallery.tabs[k])}</h3><div class="gal-grid">${items.map(item).join('')}</div></div>`).join('')}
   </div></section>`;
 }
@@ -943,7 +950,7 @@ function pageAbout(t) {
 <section class="section section-tight">
   <div class="container about-grid">
     <div class="about-copy">
-      <h2>${esc(a.title)}</h2>
+      <h2 class="words">${words(a.title)}</h2>
       ${a.paragraphs.map((p, i) => `<p${i === 0 ? ' class="lead"' : ''}>${esc(p)}</p>`).join('')}
       <div class="btn-row"><a class="btn btn-primary" href="${href(lang, 'request')}" data-track="cta" data-cta="about">${esc(t.cta.primary)}${I.arrow}</a></div>
     </div>
@@ -952,7 +959,7 @@ function pageAbout(t) {
 </section>
 <section class="section section-alt" aria-labelledby="ap-title">
   <div class="container">
-    <h2 id="ap-title" class="section-title-sm">${esc(a.principlesTitle)}</h2>
+    <h2 id="ap-title" class="section-title-sm words">${words(a.principlesTitle)}</h2>
     <ol class="principles-list principles-list-plain">
       ${a.principles.map((it, i) => `<li class="reveal"><span class="num">0${i + 1}</span><h3>${esc(it.t)}</h3><p>${esc(it.d)}</p></li>`).join('')}
     </ol>

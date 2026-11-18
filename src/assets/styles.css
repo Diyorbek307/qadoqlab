@@ -1096,10 +1096,10 @@ html.menu-open .mobile-menu {
   transform: rotate(12deg);
   pointer-events: none;
 }
-.compare-head h2 span {
+.compare-head h2 > span {
   display: block;
 }
-.compare-head h2 span + span {
+.compare-head h2 > span + span {
   color: var(--green);
   margin-top: 0.2em;
 }
@@ -3325,4 +3325,27 @@ html:not(.js) .check-path {
 .params li:hover {
   padding-left: 6px;
   color: var(--green);
+}
+
+/* section headings: words rise out of a mask one after another */
+.words .w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding: 0.08em 0 0.14em;
+  margin: -0.08em 0 -0.14em;
+}
+.words .wi {
+  display: inline-block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-ready .words .wi {
+    transform: translateY(115%) rotate(3deg);
+    transform-origin: left bottom;
+    transition: transform 0.85s var(--ease-out);
+    transition-delay: calc(var(--wi, 0) * 55ms + 60ms);
+  }
+  .reveal-ready .words.is-in .wi {
+    transform: none;
+  }
 }
