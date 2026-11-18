@@ -89,8 +89,8 @@ const mailto = (lang) => `mailto:${EMAIL}?subject=${encodeURIComponent(config.fo
 // --- icons ---
 const I = {
   arrow:
-    '<svg class="i" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  plus: '<svg class="i" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 4v12M4 10h12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    '<svg class="i i-arrow" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10h11m-4.5-4.5L15 10l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  plus: '<svg class="i" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 10h12"/><path class="plus-v" d="M10 4v12"/></g></svg>',
   mail: '<svg class="i" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 5.5h14v9H3z M3.5 6l6.5 5 6.5-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
   check:
     '<svg class="i" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4.5 10.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -653,7 +653,11 @@ ${successPanel(t, id)}`;
 
 function successPanel(t, id) {
   return `<div class="form-success" data-success-for="${id}" tabindex="-1" hidden>
-  <span class="success-icon"><svg class="i" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path class="check-path" d="M4.5 10.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  <span class="success-box" aria-hidden="true"><svg viewBox="0 0 72 64" focusable="false">
+    <rect class="sb-body" x="10" y="27" width="52" height="29" rx="3"/><path class="sb-line" d="M14 35h44"/>
+    <rect class="sb-lid" x="7" y="19" width="58" height="10" rx="2.5"/><rect class="sb-tape" x="31" y="19" width="10" height="21" rx="1"/>
+    <g class="sb-badge"><circle cx="58" cy="50" r="10"/><path class="check-path" d="M53 50.5l3.4 3.4 6.6-7"/></g>
+  </svg></span>
   <p class="success-text" role="status">${esc(t.form.success)}</p>
   <button type="button" class="btn btn-secondary" data-success-reset>${esc(t.form.successNext)}</button>
 </div>`;

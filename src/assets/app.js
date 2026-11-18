@@ -430,6 +430,29 @@
     });
   }
 
+  // main calls to action lean toward the pointer; the rect is taken on enter
+  if (finePointer && !reduceMotion) {
+    $$('.btn-lg, .header-cta').forEach(function (btn) {
+      var box = null;
+      btn.classList.add('is-magnet');
+      btn.addEventListener('pointerenter', function () {
+        box = btn.getBoundingClientRect();
+      });
+      btn.addEventListener('pointermove', function (e) {
+        if (!box) return;
+        var dx = (e.clientX - box.left) / box.width - 0.5;
+        var dy = (e.clientY - box.top) / box.height - 0.5;
+        btn.style.setProperty('--mgx', (dx * 10).toFixed(1) + 'px');
+        btn.style.setProperty('--mgy', (dy * 7).toFixed(1) + 'px');
+      });
+      btn.addEventListener('pointerleave', function () {
+        box = null;
+        btn.style.setProperty('--mgx', '0px');
+        btn.style.setProperty('--mgy', '0px');
+      });
+    });
+  }
+
   // ripple on press
   if (!reduceMotion) {
     doc.addEventListener(

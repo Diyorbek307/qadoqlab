@@ -1222,7 +1222,6 @@ html.menu-open .mobile-menu {
     background-color 0.2s;
 }
 .faq-item[open] .faq-icon {
-  transform: rotate(45deg);
   background: var(--white);
 }
 .faq-a {
@@ -2084,20 +2083,6 @@ select.input {
   text-align: left;
   padding: clamp(8px, 2vw, 20px) 0;
 }
-.success-icon {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--green);
-  color: #fff;
-  margin-bottom: 20px;
-}
-.success-icon .i {
-  width: 26px;
-  height: 26px;
-}
 .success-text {
   font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
   font-weight: 600;
@@ -2638,9 +2623,7 @@ a {
 .btn .i {
   transition: transform 0.3s var(--ease-spring);
 }
-.btn:hover .i {
-  transform: translateX(3px);
-}
+
 .ripple {
   position: absolute;
   z-index: -1;
@@ -3093,9 +3076,6 @@ a.lang-link:active {
 .form-success:not([hidden]) {
   animation: fade-up 0.6s var(--ease-out);
 }
-.form-success:not([hidden]) .success-icon {
-  animation: pop 0.6s 0.1s var(--ease-spring) both;
-}
 .check-path {
   stroke-dasharray: 20;
   stroke-dashoffset: 20;
@@ -3459,5 +3439,168 @@ html:not(.js) .check-path {
   }
   to {
     transform: rotate(28deg) scale(1.05);
+  }
+}
+
+/* --- micro-interactions --- */
+
+/* arrow on buttons runs out to the right and comes back from the left */
+@media (prefers-reduced-motion: no-preference) {
+  .btn:hover .i-arrow {
+    animation: arrow-loop 0.55s var(--ease-io);
+  }
+}
+@keyframes arrow-loop {
+  45% {
+    transform: translateX(14px);
+    opacity: 0;
+  }
+  46% {
+    transform: translateX(-14px);
+    opacity: 0;
+  }
+}
+
+/* main calls to action lean toward the pointer */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .btn.is-magnet {
+    transform: translate(var(--mgx, 0px), var(--mgy, 0px));
+    transition:
+      transform 0.35s var(--ease-spring),
+      background-color 0.22s var(--ease),
+      color 0.22s var(--ease),
+      border-color 0.22s var(--ease),
+      box-shadow 0.25s var(--ease);
+  }
+  .btn.is-magnet:active {
+    transform: translate(var(--mgx, 0px), var(--mgy, 0px)) scale(0.975);
+  }
+}
+
+/* sending: a bar runs along the bottom edge of the submit button */
+.btn-submit::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 42%;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  opacity: 0;
+  transform: translateX(-100%);
+}
+.btn-submit.is-sending::after {
+  opacity: 1;
+  animation: sending-bar 1.1s var(--ease-io) infinite;
+}
+@keyframes sending-bar {
+  to {
+    transform: translateX(240%);
+  }
+}
+
+/* FAQ: the plus turns into a minus */
+.plus-v {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.4s var(--ease-spring);
+}
+.faq-item[open] .plus-v {
+  transform: rotate(90deg);
+}
+
+/* success: the box closes, gets taped, and a check pops up */
+.success-box {
+  display: block;
+  width: 80px;
+  margin-bottom: 18px;
+}
+.success-box svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.sb-body {
+  fill: var(--kraft);
+}
+.sb-line {
+  fill: none;
+  stroke: rgba(84, 56, 26, 0.25);
+  stroke-width: 1.5;
+}
+.sb-lid {
+  fill: #d9b78a;
+  stroke: rgba(84, 56, 26, 0.25);
+}
+.sb-tape {
+  fill: #ead3a8;
+  stroke: rgba(120, 84, 40, 0.3);
+  stroke-width: 0.8;
+}
+.sb-badge circle {
+  fill: var(--green);
+}
+.sb-badge path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .form-success:not([hidden]) .sb-lid {
+    transform-box: fill-box;
+    transform-origin: 0% 100%;
+    animation: lid-close 0.7s 0.15s var(--ease-spring) both;
+  }
+  .form-success:not([hidden]) .sb-tape {
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+    animation: tape-down 0.35s 0.75s var(--ease-out) both;
+  }
+  .form-success:not([hidden]) .sb-badge {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: badge-pop 0.5s 1.05s var(--ease-spring) both;
+  }
+  .form-success:not([hidden]) .sb-badge .check-path {
+    animation: draw 0.4s 1.3s var(--ease-out) forwards;
+  }
+}
+@keyframes lid-close {
+  from {
+    transform: translate(-4px, -10px) rotate(-32deg);
+  }
+}
+@keyframes badge-pop {
+  from {
+    transform: scale(0);
+  }
+}
+@keyframes tape-down {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* home page: the logo mark is drawn once on arrival */
+@media (prefers-reduced-motion: no-preference) {
+  .js body[data-page='home'] .site-header .logo-mark path:not([stroke-dasharray]) {
+    stroke-dasharray: 90;
+    stroke-dashoffset: 90;
+    animation: draw 1.1s 0.2s var(--ease-out) forwards;
+  }
+  .js body[data-page='home'] .site-header .logo-mark path[stroke-dasharray] {
+    animation: fade-up 0.5s 0.9s var(--ease-out) both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-submit.is-sending::after {
+    animation: none;
+    width: 100%;
+    transform: none;
+    opacity: 0.5;
   }
 }
