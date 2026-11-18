@@ -162,9 +162,15 @@ async function main() {
   check(await p.isVisible('#wz [data-step-error]'), 'helper: step 1 needs a choice');
   await p.click('.tile:has(input[value=nuts])');
   await p.click('[data-wz-next]');
+  const topBefore = await p.getAttribute('#wz .box-preview .bp-top', 'points');
   await p.fill('#wz-length', '400');
   await p.fill('#wz-width', '300');
   await p.fill('#wz-height', '250');
+  await p.waitForTimeout(400);
+  check(
+    topBefore && (await p.getAttribute('#wz .box-preview .bp-top', 'points')) !== topBefore,
+    'helper: box preview follows the sizes',
+  );
   await p.click('[data-wz-next]');
   await p.fill('#wz-quantity', '3000');
   await p.click('[data-wz-next]');

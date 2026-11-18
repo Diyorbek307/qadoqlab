@@ -1058,6 +1058,133 @@
       });
   }
 
+  // --- box preview next to the size fields ---
+  // An isometric box that takes the proportions of the entered length × width × height.
+  // Built with DOM calls only (no HTML strings); purely decorative, so hidden from screen readers.
+  function initBoxPreview(group) {
+    var inputs = ['length', 'width', 'height'].map(function (name) {
+      return group.querySelector('input[name="' + name + '"]');
+    });
+    if (
+      inputs.some(function (el) {
+        return !el;
+      })
+    )
+      return;
+
+    var svg = doc.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 112 96');
+    svg.setAttribute('class', 'box-preview');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    var part = function (cls) {
+      var el = doc.createElementNS(SVG_NS, 'polygon');
+      el.setAttribute('class', cls);
+      svg.appendChild(el);
+      return el;
+    };
+    var faces = { left: part('bp-left'), right: part('bp-right'), top: part('bp-top'), tape: part('bp-tape') };
+    group.appendChild(svg);
+    group.classList.add('has-preview');
+
+    var C = Math.cos(Math.PI / 6);
+    var current = [3, 2, 2];
+    var frame = 0;
+
+    function draw(dims) {
+      var l = dims[0],
+        w = dims[1],
+        h = dims[2];
+      var P = function (x, y, z) {
+        return [(x - y) * C, (x + y) * 0.5 - z];
+      };
+      var pts = {
+        left: [P(0, w, 0), P(l, w, 0), P(l, w, h), P(0, w, h)],
+        right: [P(l, 0, 0), P(l, w, 0), P(l, w, h), P(l, 0, h)],
+        top: [P(0, 0, h), P(l, 0, h), P(l, w, h), P(0, w, h)],
+      };
+      var tw = Math.min(w * 0.12, l * 0.2);
+      pts.tape = [P(0, w / 2 - tw, h), P(l, w / 2 - tw, h), P(l, w / 2 + tw, h), P(0, w / 2 + tw, h)];
+      var all = pts.left.concat(pts.right, pts.top);
+      var xs = all.map(function (p) {
+        return p[0];
+      });
+      var ys = all.map(function (p) {
+        return p[1];
+      });
+      var minX = Math.min.apply(null, xs),
+        maxX = Math.max.apply(null, xs);
+      var minY = Math.min.apply(null, ys),
+        maxY = Math.max.apply(null, ys);
+      var k = Math.min(100 / (maxX - minX), 84 / (maxY - minY));
+      var dx = 56 - ((minX + maxX) / 2) * k;
+      var dy = 48 - ((minY + maxY) / 2) * k;
+      Object.keys(faces).forEach(function (name) {
+        faces[name].setAttribute(
+          'points',
+          pts[name]
+            .map(function (p) {
+              return (p[0] * k + dx).toFixed(1) + ',' + (p[1] * k + dy).toFixed(1);
+            })
+            .join(' '),
+        );
+      });
+    }
+
+    function target() {
+      var values = inputs.map(function (el) {
+        var n = parseInt(el.value.replace(/\s+/g, ''), 10);
+        return n > 0 ? n : 0;
+      });
+      var given = values.filter(Boolean);
+      svg.classList.toggle('is-empty', !given.length);
+      if (!given.length) return [3, 2, 2];
+      var mean =
+        given.reduce(function (a, b) {
+          return a + b;
+        }, 0) / given.length;
+      var dims = values.map(function (v) {
+        return v || mean;
+      });
+      var max = Math.max.apply(null, dims);
+      // very flat or thin boxes stay readable
+      return dims.map(function (v) {
+        return Math.max(v, max / 12);
+      });
+    }
+
+    function update() {
+      var to = target();
+      var from = current.slice();
+      cancelAnimationFrame(frame);
+      if (reduceMotion) {
+        current = to;
+        return draw(to);
+      }
+      var start = performance.now();
+      var step = function (now) {
+        var t = Math.min(1, (now - start) / 280);
+        var e = 1 - Math.pow(1 - t, 3);
+        current = from.map(function (v, i) {
+          return v + (to[i] - v) * e;
+        });
+        draw(current);
+        if (t < 1) frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+    }
+
+    inputs.forEach(function (el) {
+      el.addEventListener('input', update);
+    });
+    group.closest('form').addEventListener('reset', function () {
+      setTimeout(update, 0);
+    });
+    current = target();
+    draw(current);
+  }
+  $$('[data-field="dims"]').forEach(initBoxPreview);
+
   // --- step-by-step helper ---
   function initWizard(form) {
     var steps = $$('.wz-step', form);

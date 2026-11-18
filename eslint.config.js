@@ -31,6 +31,8 @@ const browser = {
   URLSearchParams: 'readonly',
   IntersectionObserver: 'readonly',
   requestAnimationFrame: 'readonly',
+  cancelAnimationFrame: 'readonly',
+  performance: 'readonly',
   Element: 'readonly',
   Intl: 'readonly',
   confirm: 'readonly',

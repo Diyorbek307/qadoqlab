@@ -4021,3 +4021,51 @@ html.menu-open .site-header {
   height: auto;
   overflow: visible;
 }
+
+/* box preview beside the size fields */
+.field-group.has-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  column-gap: 20px;
+  align-items: center;
+}
+.field-group.has-preview > :not(.box-preview) {
+  grid-column: 1;
+}
+.box-preview {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  width: 112px;
+  height: 96px;
+  overflow: visible;
+  transition: opacity 0.3s var(--ease);
+}
+.box-preview.is-empty {
+  opacity: 0.4;
+}
+.bp-left {
+  fill: #cfa676;
+}
+.bp-right {
+  fill: #b68a58;
+}
+.bp-top {
+  fill: #e3c399;
+}
+.box-preview polygon {
+  stroke: rgba(84, 56, 26, 0.35);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+}
+.box-preview .bp-tape {
+  fill: #ead3a8;
+  stroke: rgba(120, 84, 40, 0.3);
+}
+@media (max-width: 600px) {
+  .field-group.has-preview {
+    display: block;
+  }
+  .box-preview {
+    display: none;
+  }
+}
