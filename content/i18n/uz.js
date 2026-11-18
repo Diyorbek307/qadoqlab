@@ -371,6 +371,8 @@ module.exports = {
       'Foto yoki chizma (agar bo‘lsa)',
     ],
     formHint: 'Shaklni to‘ldirish qulayroqmi?',
+    copy: 'Manzilni nusxalash',
+    copied: 'Manzil nusxalandi',
     mapTitle: 'Xaritadagi joylashuv',
   },
 

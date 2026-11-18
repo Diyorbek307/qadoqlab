@@ -3682,3 +3682,131 @@ html:not(.js) .check-path {
     transform: scaleX(0);
   }
 }
+
+/* helper: line icons on the tiles, they hop when chosen */
+.tile span {
+  gap: 12px;
+}
+.tile-ico {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    stroke 0.2s var(--ease),
+    transform 0.3s var(--ease-out);
+}
+.tile-ico path[d^='M6 12h'] {
+  stroke-width: 2.6;
+}
+.tile:hover .tile-ico {
+  stroke: var(--green);
+}
+.tile input:checked + span .tile-ico {
+  stroke: var(--copper);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tile input:checked + span .tile-ico {
+    animation: ico-hop 0.5s var(--ease-spring);
+  }
+}
+@keyframes ico-hop {
+  40% {
+    transform: translateY(-5px) rotate(-6deg);
+  }
+}
+
+/* contacts: copy the address; the two sheets turn into a check */
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--green);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    transform 0.15s var(--ease-spring);
+}
+.contact-dl dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+}
+.copy-btn:hover {
+  border-color: var(--green);
+}
+.copy-btn:active {
+  transform: scale(0.96);
+}
+.copy-btn .copy-a,
+.copy-btn .copy-b {
+  transition:
+    opacity 0.2s,
+    transform 0.3s var(--ease-out);
+}
+.copy-btn .copy-ok {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  transition: stroke-dashoffset 0.4s 0.1s var(--ease-out);
+}
+.copy-btn.is-done {
+  background: var(--ok-bg);
+  border-color: var(--green);
+}
+.copy-btn.is-done .copy-a,
+.copy-btn.is-done .copy-b {
+  opacity: 0;
+  transform: scale(0.6);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.copy-btn.is-done .copy-ok {
+  stroke-dashoffset: 0;
+}
+
+/* 404: text and an empty box side by side */
+.nf-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  gap: clamp(24px, 5vw, 72px);
+  align-items: center;
+}
+.nf-art {
+  background: var(--panel-2);
+  border-radius: var(--radius);
+  padding: clamp(12px, 3vw, 32px);
+}
+.nf-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+@media (max-width: 760px) {
+  .nf-grid {
+    grid-template-columns: 1fr;
+  }
+  .nf-art {
+    order: -1;
+    max-width: 360px;
+  }
+}
+.nf-grid .lead {
+  margin-top: 18px;
+}

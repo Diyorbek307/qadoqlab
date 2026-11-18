@@ -800,6 +800,18 @@ const scenes = {
     s.end();
     return s.svg({ pad: 24, aspect: 1.08, grain: false });
   },
+  // 404: an empty box opens on its podium — nothing inside.
+  lost() {
+    const s = new Scene();
+    s.raw('<animate id="hxGo" attributeName="opacity" values="1;1" dur="0.1s" begin="indefinite"/>');
+    s.begin('hx hx-pod hx-1');
+    s.podium(0, 0, 0, 380, 300, 40);
+    s.end();
+    s.begin('hx hx-box hx-2');
+    s.openBoxAnimated(70, 70, 40, 230, 170, 160, { hold: 1.1, dur: 0.8, minorDelay: 0.3 });
+    s.end();
+    return s.svg({ aspect: 4 / 3, grain: false });
+  },
   transport() {
     const s = new Scene();
     s.podium(0, 0, 0, 380, 300, 40);

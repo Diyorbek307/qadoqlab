@@ -251,6 +251,28 @@
   var heroStart = doc.getElementById('hxGo');
   if (heroStart && typeof heroStart.beginElement === 'function' && !reduceMotion) heroStart.beginElement();
 
+  // contacts: copy the e-mail address
+  if (navigator.clipboard && window.isSecureContext) {
+    $$('[data-copy]').forEach(function (btn) {
+      var label = btn.querySelector('.copy-label');
+      var idle = label.textContent;
+      var timer = 0;
+      btn.hidden = false;
+      btn.addEventListener('click', function () {
+        navigator.clipboard.writeText(btn.getAttribute('data-copy')).then(function () {
+          clearTimeout(timer);
+          btn.classList.add('is-done');
+          label.textContent = btn.getAttribute('data-label-done');
+          track('email_copy');
+          timer = setTimeout(function () {
+            btn.classList.toggle('is-done', false);
+            label.textContent = idle;
+          }, 2400);
+        });
+      });
+    });
+  }
+
   // --- reveal on scroll ---
   if ('IntersectionObserver' in window && !reduceMotion) {
     // Headings split into words get an index for the stagger.

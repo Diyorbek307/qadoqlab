@@ -103,6 +103,18 @@ const I = {
 const markSvg = (cls = 'logo-mark') =>
   `<svg class="${cls}" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">${MARK_PATHS}</g></svg>`;
 
+// Line icons for the "what to pack" tiles in the helper (24×24, stroke).
+const TILE_ICONS = {
+  textile: 'M8 4 4 7l2 4 2-1v10h8V10l2 1 2-4-4-3c-1 1.4-2.4 2-4 2s-3-.6-4-2Z',
+  nuts: 'M12 3c4 3 6.2 7.3 4.6 11.6C15.2 18.4 9.4 21.6 7 17.6 4.8 13.8 7 7 12 3Zm-3 13c1.6-3 3.6-5.8 6-8',
+  food: 'M6 8h12l-1 12H7L6 8Zm3 0V6.5a3 3 0 0 1 6 0V8',
+  ecommerce: 'M4 8 12 4l8 4v8l-8 4-8-4V8Zm0 0 8 4 8-4m-8 4v8',
+  documents: 'M3 7h6l2 2h10v10H3V7Z',
+  other: 'M6 12h.01M12 12h.01M18 12h.01',
+};
+const tileIcon = (key) =>
+  `<svg class="tile-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${TILE_ICONS[key]}"/></svg>`;
+
 // --- illustrations ---
 const IMG = {};
 let HERO_SVG = '';
@@ -686,7 +698,7 @@ function wizard(t) {
         <fieldset class="wz-step" data-step="1">
           ${stepHead(1, w.s1.q)}
           <div class="tiles">
-            ${what.map((k) => `<label class="tile"><input type="radio" name="industry" value="${k}"><span>${esc(t.form.industries[k])}</span></label>`).join('')}
+            ${what.map((k) => `<label class="tile"><input type="radio" name="industry" value="${k}"><span>${esc(t.form.industries[k])}${tileIcon(k)}</span></label>`).join('')}
           </div>
           <p class="field-error" data-step-error hidden></p>
         </fieldset>
@@ -1027,7 +1039,7 @@ function pageContacts(t) {
     <div class="contact-card">
       <p class="contact-brand">QADOQLAB</p>
       <p class="muted">${esc(c.lead)}</p>
-      <dl class="contact-dl"><div><dt>${esc(c.emailLabel)}</dt><dd><a class="contact-email" href="${mailto(lang)}" data-track="email">${esc(EMAIL)}</a></dd></div></dl>
+      <dl class="contact-dl"><div><dt>${esc(c.emailLabel)}</dt><dd><a class="contact-email" href="${mailto(lang)}" data-track="email">${esc(EMAIL)}</a><button type="button" class="copy-btn" data-copy="${esc(EMAIL)}" data-label-done="${esc(c.copied)}" hidden><svg class="i" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect class="copy-a" x="7" y="7" width="9" height="9" rx="1.5"/><path class="copy-b" d="M13 4.5H5.5a1 1 0 0 0-1 1V13"/><path class="copy-ok" d="M4.5 10.5l3.5 3.5 7.5-8"/></g></svg><span class="copy-label">${esc(c.copy)}</span></button></dd></div></dl>
       ${contactExtras(t, 'page')}
       <a class="btn btn-primary btn-lg" href="${mailto(lang)}" data-track="email">${I.mail}${esc(t.cta.email)}</a>
       <p class="contact-sign">${esc(config.brand.signature[lang])}</p>
@@ -1071,7 +1083,8 @@ function pagePrivacy(t) {
 function page404() {
   const t = dict.ru;
   const u = dict.uz;
-  const body = `<section class="page-head page-404"><div class="container">
+  const art = scenes.lost().replace('<svg ', '<svg class="nf-svg" aria-hidden="true" focusable="false" ');
+  const body = `<section class="page-head page-404"><div class="container nf-grid"><div>
   <p class="eyebrow">404</p>
   <h1>${esc(t.notFound.h1)}</h1>
   <p class="lead">${esc(t.notFound.text)}</p>
@@ -1081,6 +1094,8 @@ function page404() {
     <p>${esc(u.notFound.text)}</p>
     <a class="link-arrow" href="/uz/">${esc(u.notFound.home)}${I.arrow}</a>
   </div>
+  </div>
+  <div class="nf-art">${art}</div>
 </div></section>`;
   return layout(
     t,
