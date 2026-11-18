@@ -344,6 +344,9 @@
           )
         : card('Аналитика', 'badge-off', 'Не подключена', '');
     $('#status-cards').innerHTML = html;
+    $$('.card', $('#status-cards')).forEach(function (el, i) {
+      el.style.setProperty('--i', i);
+    });
     $('#build-info').textContent = 'Сайт собран: ' + fmtDate(st.build.builtAt) + ' · страниц: ' + st.build.pages;
 
     var s = S.settings;

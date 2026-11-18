@@ -861,7 +861,7 @@ function pageCategory(t, cat) {
       <h2 id="params-title" class="words">${words(cp.paramsTitle)}</h2>
       <p class="muted">${esc(cp.paramsNote)}</p>
     </div>
-    <ol class="params split-main">${cp.params.map((p, i) => `<li><span class="num">${String(i + 1).padStart(2, '0')}</span>${esc(p)}</li>`).join('')}</ol>
+    <ol class="params split-main">${cp.params.map((p, i) => `<li class="reveal"><span class="num">${String(i + 1).padStart(2, '0')}</span>${esc(p)}</li>`).join('')}</ol>
   </div>
 </section>
 <section class="section" id="request-form" aria-labelledby="pf-title">

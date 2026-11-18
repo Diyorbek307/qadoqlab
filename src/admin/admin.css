@@ -884,3 +884,33 @@ select.input {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* overview cards come in one after another */
+.card {
+  animation: rise 0.45s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+/* a toast shows how long it will stay */
+.toast {
+  position: relative;
+  overflow: hidden;
+}
+.toast::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.45);
+  transform-origin: left;
+  animation: toast-timer 4s linear forwards;
+}
+.toast.is-error::after {
+  animation-duration: 7s;
+}
+@keyframes toast-timer {
+  to {
+    transform: scaleX(0);
+  }
+}

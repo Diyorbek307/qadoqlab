@@ -201,7 +201,7 @@
         function () {
           menu.hidden = true;
         },
-        reduceMotion ? 0 : 280,
+        reduceMotion ? 0 : 380,
       );
       if (restoreFocus) toggle.focus();
     }

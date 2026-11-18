@@ -403,7 +403,7 @@ class Scene {
 
   // Open box for the hero: it arrives closed and taped, the tape comes off and the flaps open,
   // the long (major) pair first. Final geometry matches openBox().
-  openBoxAnimated(x, y, z, w, d, h, { back = 14, front = 64, hold = 1.35, dur = 0.8, minorDelay = 0.35 } = {}) {
+  openBoxAnimated(x, y, z, w, d, h, { back = 14, front = 64, hold = 1.65, dur = 0.8, minorDelay = 0.35 } = {}) {
     const t = 6;
     const top = z + h;
     const length = d / 2;
