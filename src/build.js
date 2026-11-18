@@ -3,6 +3,8 @@
  * Static site generator for QADOQLAB. No dependencies.
  *   node src/build.js          → dist/       public build, confirmed content only
  *   node src/build.js --demo   → dist-demo/  every category, marked as demo, noindex
+ * STATIC_HOSTING=true builds for a host without the Node server (Render static site and
+ * the like): forms start in e-mail mode and never call /api.
  */
 const fs = require('fs');
 const path = require('path');
@@ -10,6 +12,7 @@ const crypto = require('crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const DEMO = process.argv.includes('--demo');
+const STATIC = process.env.STATIC_HOSTING === 'true';
 const outArg = (process.argv.find((a) => a.startsWith('--out=')) || '').slice(6);
 const OUT = path.resolve(ROOT, outArg || (DEMO ? 'dist-demo' : 'dist'));
 
@@ -85,6 +88,11 @@ const isPublished = (cat) =>
 const published = () => catalog.filter(isPublished);
 
 const mailto = (lang) => `mailto:${EMAIL}?subject=${encodeURIComponent(config.form.mailSubject[lang])}`;
+// Without a server, a form submitted with JS off still ends up in the visitor's mail app.
+const formTarget = (lang) =>
+  STATIC
+    ? `action="${mailto(lang)}" method="post" enctype="text/plain"`
+    : 'action="/api/request" method="post" enctype="multipart/form-data"';
 
 // --- icons ---
 const I = {
@@ -170,7 +178,7 @@ function head(t, { title, description, pathKey, slug, ogType = 'website', jsonld
     `<meta property="og:locale" content="${t.locale}">`,
     `<meta property="og:locale:alternate" content="${dict[lang === 'ru' ? 'uz' : 'ru'].locale}">`,
     DOMAIN && self ? `<meta property="og:url" content="${abs(self)}">` : '',
-    `<meta property="og:image" content="${abs('/assets/og.jpg')}">`,
+    `<meta property="og:image" content="${abs(ASSETS.og)}">`,
     '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">',
     '<meta name="twitter:card" content="summary_large_image">',
   ].join('');
@@ -625,11 +633,11 @@ function formFooter(t, id, submitText) {
   const policy = privacyReady() ? ` <a href="${href(t.lang, 'privacy')}">${esc(t.form.privacyLink)}</a>.` : '';
   return `<div class="form-foot">
     <p class="form-privacy">${esc(t.form.privacyNote)}${policy}</p>
-    <p class="form-mode-note" data-mailto-note hidden>${I.mail}<span>${fill(esc(t.form.mailtoMode), { email: `<a href="${mailto(t.lang)}">${esc(EMAIL)}</a>` })} ${esc(t.form.mailtoFiles)}</span></p>
+    <p class="form-mode-note" data-mailto-note${STATIC ? '' : ' hidden'}>${I.mail}<span>${fill(esc(t.form.mailtoMode), { email: `<a href="${mailto(t.lang)}">${esc(EMAIL)}</a>` })} ${esc(t.form.mailtoFiles)}</span></p>
     <p class="form-files-note" data-files-email-note hidden>${fill(esc(t.form.filesByEmail), { email: `<a href="${mailto(t.lang)}" data-track="email">${esc(EMAIL)}</a>` })}</p>
     <div class="form-status" data-status role="status" aria-live="polite" tabindex="-1"></div>
     <button class="btn btn-primary btn-lg btn-submit" type="submit" data-submit data-label="${esc(submitText)}" data-label-mailto="${esc(t.form.mailtoSubmit)}" data-label-sending="${esc(t.form.sending)}">
-      <span class="btn-label">${esc(submitText)}</span><span class="spinner" aria-hidden="true"></span>
+      <span class="btn-label">${esc(STATIC ? t.form.mailtoSubmit : submitText)}</span><span class="spinner" aria-hidden="true"></span>
     </button>
   </div>`;
 }
@@ -644,7 +652,7 @@ function requestForm(t, { id = 'rf', presetType = '', compact = false } = {}) {
   const L = config.form.limits;
   const lang = t.lang;
   const typeCat = presetType ? catalog.find((c) => c.slug === presetType) : null;
-  return `<form class="req-form${compact ? ' req-form-compact' : ''}" id="${id}" action="/api/request" method="post" enctype="multipart/form-data" novalidate data-request-form data-lang="${lang}" data-preset-type="${esc(presetType)}">
+  return `<form class="req-form${compact ? ' req-form-compact' : ''}" id="${id}" ${formTarget(lang)} novalidate data-request-form data-lang="${lang}" data-preset-type="${esc(presetType)}">
   ${errorSummary(t)}
   <div class="type-chip" data-type-chip${typeCat ? '' : ' hidden'}>
     <span class="type-chip-label">${esc(t.form.selectedType)}:</span> <strong data-type-name>${typeCat ? esc(typeCat[lang].name) : ''}</strong>
@@ -721,7 +729,7 @@ function wizard(t) {
     </div>
     <div class="wizard-card">
       <div class="wz-progress" aria-hidden="true"><span data-wz-bar></span></div>
-      <form class="wizard" id="${id}" action="/api/request" method="post" enctype="multipart/form-data" novalidate data-wizard data-request-form data-lang="${t.lang}">
+      <form class="wizard" id="${id}" ${formTarget(t.lang)} novalidate data-wizard data-request-form data-lang="${t.lang}">
         ${errorSummary(t)}
         <fieldset class="wz-step" data-step="1">
           ${stepHead(1, w.s1.q)}
@@ -1223,6 +1231,7 @@ function buildAssets() {
   }
   const clientCfg = {
     email: EMAIL,
+    staticHosting: STATIC,
     maxFiles: config.form.maxFiles,
     maxFileSizeMb: config.form.maxFileSizeMb,
     allowedTypes: config.form.allowedTypes,
@@ -1256,8 +1265,16 @@ function buildAssets() {
       if (/^[a-f0-9]{16}\.(jpg|png|webp)$/.test(f)) fs.copyFileSync(path.join(media, f), path.join(OUT, 'media', f));
   }
   const stat = path.join(ROOT, 'src', 'static');
-  for (const f of fs.readdirSync(stat))
-    fs.copyFileSync(path.join(stat, f), path.join(OUT, f === 'og.jpg' ? 'assets/og.jpg' : f));
+  for (const f of fs.readdirSync(stat)) {
+    if (f !== 'og.jpg') {
+      fs.copyFileSync(path.join(stat, f), path.join(OUT, f));
+      continue;
+    }
+    // the share image gets a content hash too, so every asset under /assets/ is immutable
+    const og = fs.readFileSync(path.join(stat, f));
+    ASSETS.og = `/assets/og.${hash(og)}.jpg`;
+    fs.writeFileSync(path.join(OUT, ASSETS.og.slice(1)), og);
+  }
 }
 
 // --- SEO files ---
@@ -1318,6 +1335,7 @@ function main() {
     JSON.stringify(
       {
         demo: DEMO,
+        staticHosting: STATIC,
         indexable: INDEXABLE,
         css: ASSETS.css,
         scriptHashes: [`sha256-${inlineHash}`],

@@ -29,7 +29,13 @@ const ANALYTICS_HOSTS = {
  * reaches innerHTML or a script URL) unless an analytics tag is on: those tags inject
  * scripts themselves and would break under it.
  */
-function buildCsp({ scriptHashes = [], analytics = {}, trustedTypes = false }) {
+function buildCsp({
+  scriptHashes = [],
+  analytics = {},
+  trustedTypes = false,
+  mailtoForms = false,
+  https = settings.https,
+}) {
   const script = ["'self'", ...scriptHashes.map((h) => `'${h}'`)];
   const connect = ["'self'"];
   const img = ["'self'", 'data:'];
@@ -50,22 +56,22 @@ function buildCsp({ scriptHashes = [], analytics = {}, trustedTypes = false }) {
     "frame-src 'none'",
     "worker-src 'none'",
     "manifest-src 'self'",
-    "form-action 'self'",
+    mailtoForms ? "form-action 'self' mailto:" : "form-action 'self'",
     "frame-ancestors 'none'",
     "base-uri 'none'",
     "object-src 'none'",
   ];
   if (trustedTypes && !analytics.ga4 && !analytics.ym)
     directives.push("require-trusted-types-for 'script'", "trusted-types 'none'");
-  if (settings.https) directives.push('upgrade-insecure-requests');
+  if (https) directives.push('upgrade-insecure-requests');
   return directives.join('; ');
 }
 
 // Mutable so the CSP can be swapped after a rebuild without restarting.
 const headers = { site: { ...BASE_HEADERS }, admin: { ...BASE_HEADERS } };
 
-function setCsp({ scriptHashes, analytics }) {
-  headers.site['Content-Security-Policy'] = buildCsp({ scriptHashes, analytics, trustedTypes: true });
+function setCsp({ scriptHashes, analytics, mailtoForms = false }) {
+  headers.site['Content-Security-Policy'] = buildCsp({ scriptHashes, analytics, trustedTypes: true, mailtoForms });
   headers.admin['Content-Security-Policy'] = buildCsp({ scriptHashes: [], analytics: {} });
 }
 
@@ -151,4 +157,4 @@ function isSameOrigin(req) {
   }
 }
 
-module.exports = { headers, setCsp, buildCsp, json, plain, readBody, clientIp, isSameOrigin, HttpError };
+module.exports = { BASE_HEADERS, headers, setCsp, buildCsp, json, plain, readBody, clientIp, isSameOrigin, HttpError };

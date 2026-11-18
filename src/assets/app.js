@@ -604,6 +604,8 @@
   var statusPromise = null;
   function getStatus() {
     if (statusPromise) return statusPromise;
+    // static hosting: there is no server to ask, the e-mail mode is the only one
+    if (CFG.staticHosting) return (statusPromise = Promise.resolve({ online: false }));
     statusPromise = new Promise(function (resolve) {
       var done = false;
       var t = setTimeout(function () {

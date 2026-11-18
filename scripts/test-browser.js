@@ -37,11 +37,11 @@ function freePort() {
   });
 }
 
-function build(out, demo) {
+function build(out, demo, env = {}) {
   const args = [path.join(ROOT, 'src/build.js'), `--out=${out}`];
   if (demo) args.push('--demo');
   const res = spawnSync(process.execPath, args, {
-    env: { ...process.env, DATA_DIR: path.join(tmp, 'data') },
+    env: { ...process.env, DATA_DIR: path.join(tmp, 'data'), ...env },
     encoding: 'utf8',
   });
   if (res.status !== 0) throw new Error(`build failed: ${res.stderr}`);
@@ -71,6 +71,29 @@ async function startServer(env) {
     await new Promise((r) => setTimeout(r, 100));
   }
   throw new Error('server did not start');
+}
+
+// A host without the Node server, like a Render static site: files only, no /api.
+const TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.svg': 'image/svg+xml',
+};
+async function startStaticHost(dir) {
+  const srv = http.createServer((req, res) => {
+    let file = path.join(dir, decodeURIComponent(req.url.split('?')[0]));
+    if (file.endsWith(path.sep)) file = path.join(file, 'index.html');
+    if (req.method !== 'GET' || !file.startsWith(dir) || !fs.existsSync(file)) {
+      res.writeHead(404);
+      return res.end();
+    }
+    res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
+    res.end(fs.readFileSync(file));
+  });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  children.push({ kill: () => srv.close() });
+  return `http://127.0.0.1:${srv.address().port}`;
 }
 
 function cleanup() {
@@ -104,6 +127,8 @@ async function main() {
     MIN_FILL_MS: '500',
   });
   const offline = await startServer({ SITE_DIR: path.join(tmp, 'public') });
+  build(path.join(tmp, 'static'), false, { STATIC_HOSTING: 'true' });
+  const staticHost = await startStaticHost(path.join(tmp, 'static'));
 
   const browser = await chromium.launch();
   const errors = [];
@@ -335,6 +360,22 @@ async function main() {
     'no JS: every block is visible',
   );
   check(await n.isVisible('#wz .wz-step[data-step="5"]'), 'no JS: the helper is a plain form with all steps');
+
+  // Static hosting: no server to ask, the forms start in e-mail mode
+  const apiCalls = [];
+  const st = watch(await desktop.newPage());
+  st.on('request', (req) => req.url().includes('/api/') && apiCalls.push(req.url()));
+  await st.goto(`${staticHost}/ru/request/`);
+  check((await st.getAttribute('#rf', 'data-mode')) === 'mailto', 'static hosting: the form is in e-mail mode');
+  check(await st.isVisible('#rf [data-mailto-note]'), 'static hosting: the e-mail note is shown');
+  await st.goto(`${staticHost}/ru/`);
+  check(apiCalls.length === 0, 'static hosting: no requests to /api');
+  const sn = await nojs.newPage();
+  await sn.goto(`${staticHost}/ru/request/`);
+  check(
+    (await sn.getAttribute('#rf', 'action')).startsWith('mailto:qadoqlab.uz@gmail.com?'),
+    'static hosting, no JS: the form goes to the mail app',
+  );
 
   check(errors.length === 0, `no console errors ${JSON.stringify(errors)}`);
   await browser.close();

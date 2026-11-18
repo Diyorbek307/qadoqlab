@@ -29,6 +29,7 @@ function refreshBuild() {
   build = JSON.parse(fs.readFileSync(path.join(root, '_build.json'), 'utf8'));
   setCsp({
     scriptHashes: build.scriptHashes || [],
+    mailtoForms: Boolean(build.staticHosting),
     analytics: { ga4: Boolean(config.analytics.ga4Id), ym: Boolean(config.analytics.yandexMetrikaId) },
   });
 }

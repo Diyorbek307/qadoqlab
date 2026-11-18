@@ -24,7 +24,7 @@ const TYPES = {
 const COMPRESSIBLE = new Set(['.html', '.css', '.js', '.svg', '.xml', '.txt', '.json']);
 const MAX_CACHED = 1024 * 1024;
 // Asset names carry a content hash, so they never change and can be cached for a year.
-const HASHED = /^assets\/((img|fonts)\/)?[\w-]+\.[0-9a-f]{10}\.(css|js|svg|woff2)$/;
+const HASHED = /^assets\/((img|fonts)\/)?[\w-]+\.[0-9a-f]{10}\.(css|js|svg|woff2|jpg)$/;
 
 function createStatic({ root, getHeaders }) {
   const cache = new Map();

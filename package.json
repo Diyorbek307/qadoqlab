@@ -12,13 +12,14 @@
     "build:demo": "node src/build.js --demo",
     "start": "node server/server.js",
     "dev": "node src/build.js && node server/server.js",
-    "check": "node scripts/check.js",
+    "check": "node scripts/check.js && node scripts/render-yaml.js --check",
     "test": "node scripts/test-server.js && node scripts/test-admin.js",
     "test:admin": "node scripts/test-admin.js",
     "test:browser": "node scripts/test-browser.js",
     "lint": "npx --yes eslint@9 .",
     "format": "npx --yes prettier@3 --write \"**/*.{js,css,html,json}\"",
     "admin:password": "node scripts/admin-password.js",
-    "render:static": "node scripts/render-static.js"
+    "render:static": "node scripts/render-static.js",
+    "render:yaml": "node scripts/render-yaml.js"
   }
 }
