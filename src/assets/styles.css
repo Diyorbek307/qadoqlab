@@ -4069,3 +4069,23 @@ html.menu-open .site-header {
     display: none;
   }
 }
+
+/* going back runs the page transition in the opposite direction */
+html.vt-back::view-transition-old(root) {
+  animation-name: vt-out-back;
+}
+html.vt-back::view-transition-new(root) {
+  animation-name: vt-in-back;
+}
+@keyframes vt-out-back {
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes vt-in-back {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}

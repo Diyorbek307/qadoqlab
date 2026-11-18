@@ -200,7 +200,14 @@ ${jsonld}
 </head>`;
 }
 // The only inline script: flags JS for the styles. Its hash goes into the server's CSP.
-const INLINE_JS = "document.documentElement.classList.add('js')";
+// It also marks back navigation, so the page transition can run in the opposite direction;
+// that has to happen before the first frame, hence inline.
+const INLINE_JS = [
+  'var d=document.documentElement;d.classList.add("js");',
+  'addEventListener("pagereveal",function(e){var a=window.navigation&&navigation.activation;',
+  'if(!e.viewTransition||!a||!a.from||!a.entry||a.navigationType!=="traverse"||a.entry.index>a.from.index)return;',
+  'd.classList.add("vt-back");e.viewTransition.finished.finally(function(){d.classList.toggle("vt-back",false)})});',
+].join('');
 
 function header(t, current, altHref) {
   const lang = t.lang;
