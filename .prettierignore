@@ -1,0 +1,6 @@
+dist/
+dist-demo/
+data/
+preview/
+*.next/
+src/assets/fonts/
