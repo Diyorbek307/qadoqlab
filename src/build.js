@@ -115,6 +115,18 @@ const TILE_ICONS = {
 const tileIcon = (key) =>
   `<svg class="tile-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${TILE_ICONS[key]}"/></svg>`;
 
+// Icons for the industries on the business page.
+const BIZ_ICONS = {
+  nuts: TILE_ICONS.nuts,
+  textile: TILE_ICONS.textile,
+  ecommerce: TILE_ICONS.ecommerce,
+  confectionery: 'M6 11h12l-1.4 9H7.4L6 11Zm0 0a6 6 0 0 1 12 0M10 11l-.6 9M14 11l.6 9',
+  warehouse: 'M3 20V9l9-5 9 5v11M7 20v-6h10v6M7 17h10',
+  goods: 'M10 3h4v3l2 3v11H8V9l2-3V3Zm-2 9h8',
+};
+const bizIcon = (key) =>
+  `<svg class="biz-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${BIZ_ICONS[key] || TILE_ICONS.other}"/></svg>`;
+
 // --- illustrations ---
 const IMG = {};
 let HERO_SVG = '';
@@ -381,12 +393,17 @@ function catalogEmpty(t, { headingLevel = 3 } = {}) {
   const lang = t.lang;
   const h = `h${headingLevel}`;
   return `<div class="cat-empty reveal">
-  <figure class="cat-empty-figure">${img('dieline', catalog.find((c) => c.slug === 'custom-boxes')[lang].alt)}<figcaption class="illus-caption">${esc(t.illustrationLabel)}</figcaption></figure>
+  <figure class="cat-empty-figure">${scenes
+    .dielineLive()
+    .replace(
+      '<svg ',
+      `<svg class="cat-empty-svg" aria-label="${esc(catalog.find((c) => c.slug === 'custom-boxes')[lang].alt)}" `,
+    )}<figcaption class="illus-caption">${esc(t.illustrationLabel)}</figcaption></figure>
   <div class="cat-empty-body">
     <${h} class="cat-empty-title">${esc(t.catalogSection.emptyTitle)}</${h}>
     <p class="lead">${esc(t.catalogSection.emptyLead)}</p>
     <dl class="param-grid">
-      ${t.catalogSection.emptyPoints.map((p) => `<div><dt>${esc(p.t)}</dt><dd>${esc(p.d)}</dd></div>`).join('')}
+      ${t.catalogSection.emptyPoints.map((p) => `<div class="reveal"><dt>${esc(p.t)}</dt><dd>${esc(p.d)}</dd></div>`).join('')}
     </dl>
     <div class="btn-row">
       <a class="btn btn-primary" href="${href(lang, 'request')}#request-form" data-track="cta" data-cta="catalog-empty">${esc(t.cta.sendSizes)}${I.arrow}</a>
@@ -426,6 +443,7 @@ function businessList(t, { headingLevel = 3 } = {}) {
   ${t.business.items
     .map(
       (it, i) => `<li class="biz-item reveal">
+    ${bizIcon(it.key)}
     <span class="num">${String(i + 1).padStart(2, '0')}</span>
     <${h}>${esc(it.t)}</${h}>
     <p>${esc(it.d)}</p>

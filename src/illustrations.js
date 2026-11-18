@@ -646,7 +646,9 @@ class Scene {
     for (let i = 0; i < 5; i++) folds += `M${xs[i]},${F}V${F + H} `;
     folds += `M${g},${F}H${W} M${g},${F + H}H${W}`;
     this.raw(
-      `<g transform="${m}"><g filter="url(#grain)"><path d="${fill}" fill="#DDBB8E"/></g><path d="${cut}" fill="none" stroke="rgba(84,56,26,.6)" stroke-width="1.4" stroke-linejoin="round"/><path d="${folds}" fill="none" stroke="#A7653E" stroke-width="1.6" stroke-dasharray="7 5"/></g>`,
+      `<g transform="${m}"><g class="dl-sheet" filter="url(#grain)"><path d="${fill}" fill="#DDBB8E"/></g>` +
+        `<path class="dl-cut" pathLength="1" d="${cut}" fill="none" stroke="rgba(84,56,26,.6)" stroke-width="1.4" stroke-linejoin="round"/>` +
+        `<path class="dl-fold" d="${folds}" fill="none" stroke="#A7653E" stroke-width="1.6" stroke-dasharray="7 5"/></g>`,
     );
   }
   textile(x, y, z, w, d, layers) {
@@ -685,7 +687,7 @@ class Scene {
   }
   // grain: false drops the paper texture filter — used for the animated hero, where a
   // turbulence filter would be re-rendered on every animation frame.
-  svg({ pad = 30, aspect = null, title = '', grain = true } = {}) {
+  svg({ pad = 30, aspect = null, title = '', grain = true, idPrefix = '' } = {}) {
     let minX = Infinity,
       minY = Infinity,
       maxX = -Infinity,
@@ -718,6 +720,12 @@ class Scene {
     if (!grain) {
       body = body.replace(/ filter="url\(#grain\)"/g, '');
       defs = defs.replace(/<filter id="grain"[\s\S]*?<\/filter>/, '');
+    }
+    // Several inline SVGs can share a page; a prefix keeps their gradient and filter ids unique.
+    if (idPrefix) {
+      const ids = /\b(id="|url\(#)(gT|gL|gR|gFloor|blur|grain)\b/g;
+      body = body.replace(ids, `$1${idPrefix}-$2`);
+      defs = defs.replace(ids, `$1${idPrefix}-$2`);
     }
     const heading = title ? `<title>${title}</title>` : '';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${r(minX)} ${r(minY)} ${r(W)} ${r(H)}" width="${Math.round(W)}" height="${Math.round(H)}" role="img">${heading}${defs}${body}</svg>`;
@@ -813,7 +821,7 @@ const scenes = {
     s.begin('hx hx-box hx-2');
     s.openBoxAnimated(70, 70, 40, 230, 170, 160, { hold: 1.1, dur: 0.8, minorDelay: 0.3 });
     s.end();
-    return s.svg({ aspect: 4 / 3, grain: false });
+    return s.svg({ aspect: 4 / 3, grain: false, idPrefix: 'nf' });
   },
   transport() {
     const s = new Scene();
@@ -864,6 +872,17 @@ const scenes = {
     s.dieline(10, 30, 24, 120, 80, 110);
     s.closedBox(380, 30, 24, 120, 80, 110, { seam: true });
     return s.svg({ aspect: 4 / 3 });
+  },
+  // Inline version for the "box for your product" block: the blank is cut out line by line,
+  // the folds appear and the finished box comes down next to it (styles.css drives it).
+  dielineLive() {
+    const s = new Scene();
+    s.podium(-20, -20, 0, 560, 300, 24);
+    s.dieline(10, 30, 24, 120, 80, 110);
+    s.begin('dl-box');
+    s.closedBox(380, 30, 24, 120, 80, 110, { seam: true });
+    s.end();
+    return s.svg({ aspect: 4 / 3, grain: false, idPrefix: 'dl' });
   },
   printed() {
     const s = new Scene();
