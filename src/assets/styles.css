@@ -2990,15 +2990,30 @@ a.lang-link:active {
 /* final CTA: faint box blank in the background */
 .final-cta {
   background-color: var(--green);
-  background-image: radial-gradient(700px 380px at 90% 0%, rgba(196, 154, 108, 0.18), transparent 60%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 320' fill='none' stroke='%23C49A6C' stroke-opacity='.22' stroke-width='1.2'%3E%3Cpath d='M20 80h140v160H20zM160 80h100v160H160zM260 80h140v160H260zM400 80h100v160H400zM500 96l24-16v160l-24-16'/%3E%3Cpath d='M20 80V20h140v60M160 80V30h100v50M260 80V20h140v60M400 80V30h100v50M20 240v60h140v-60M160 240v50h100v-50M260 240v60h140v-60M400 240v50h100v-50' stroke-dasharray='6 5'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position:
-    0 0,
-    right -60px bottom -40px;
-  background-size:
-    auto,
-    min(720px, 90vw) auto;
+  background-image: radial-gradient(700px 380px at 90% 0%, rgba(196, 154, 108, 0.18), transparent 60%);
+  view-timeline-name: --final;
+}
+.final-inner {
+  position: relative;
+  z-index: 1;
+}
+.final-dieline {
+  position: absolute;
+  right: -60px;
+  bottom: -40px;
+  width: min(720px, 90vw);
+  height: auto;
+  color: rgba(196, 154, 108, 0.22);
+  pointer-events: none;
+}
+.final-dieline path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.final-dieline .fold {
+  stroke-dasharray: 6 5;
 }
 .final-cta h2 {
   text-wrap: balance;
@@ -3382,5 +3397,67 @@ html:not(.js) .check-path {
   .cat-card.is-tilting .cat-media img {
     transform: translate(calc(var(--tx, 0) * -9px), calc(var(--ty, 0) * -6px)) scale(1.05);
     transition: transform 0.25s var(--ease-out);
+  }
+}
+
+/* scroll-linked motion: only where the browser supports scroll timelines, never hijacking scroll */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* the box blank in the final block is cut out line by line as it scrolls in, then folds appear */
+    .final-dieline .cut {
+      stroke-dasharray: 1;
+      animation: dieline-cut linear both;
+      animation-timeline: --final;
+      animation-range: entry 5% cover 50%;
+    }
+    .final-dieline .fold {
+      animation: dieline-fold linear both;
+      animation-timeline: --final;
+      animation-range: cover 35% cover 60%;
+    }
+    /* the hero picture lags behind the page a little */
+    .hero-svg {
+      animation: hero-drift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 90vh;
+    }
+    /* the dashed square behind the compare card turns with the scroll */
+    .compare-card {
+      view-timeline-name: --compare;
+    }
+    .reveal-ready .compare-card::after,
+    .reveal-ready .compare-card.is-in::after {
+      opacity: 1;
+      transition: none;
+      animation: square-turn linear both;
+      animation-timeline: --compare;
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+@keyframes dieline-cut {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes dieline-fold {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes hero-drift {
+  to {
+    transform: translateY(56px) scale(0.97);
+  }
+}
+@keyframes square-turn {
+  from {
+    transform: rotate(-24deg) scale(0.85);
+  }
+  to {
+    transform: rotate(28deg) scale(1.05);
   }
 }

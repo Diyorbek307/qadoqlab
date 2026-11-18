@@ -497,6 +497,7 @@ function faqSection(t) {
 
 function finalCta(t) {
   return `<section class="final-cta" aria-labelledby="final-title">
+  <svg class="final-dieline" viewBox="0 0 640 320" aria-hidden="true" focusable="false"><path class="cut" pathLength="1" d="M20 20H158V80H162V30H258V80H262V20H398V80H402V30H500V80L524 96V224L500 240V290H402V240H398V300H262V240H258V290H162V240H158V300H20Z"/><path class="fold" d="M20 80H500M20 240H500M160 80V240M260 80V240M400 80V240M500 80V240"/></svg>
   <div class="container final-inner reveal">
     <h2 id="final-title" class="words">${words(t.finalCta.title)}</h2>
     <div>
