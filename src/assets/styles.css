@@ -2367,22 +2367,27 @@ body.has-sticky {
 }
 
 /* --- reveal --- */
-.reveal-ready .reveal {
+/* A keyframe animation rather than a transition: with fill-mode "backwards" it lets go of the
+   element when it ends, so hover lifts and tilts work right away and without the stagger delay. */
+.reveal-ready .reveal:not(.is-in) {
   opacity: 0;
-  transform: translateY(14px);
-  transition:
-    opacity 0.6s var(--ease),
-    transform 0.6s var(--ease);
 }
 .reveal-ready .reveal.is-in {
-  opacity: 1;
-  transform: none;
+  animation: reveal-in 0.75s var(--ease-out) backwards;
+  animation-delay: calc(var(--d, 0) * 80ms);
+}
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .reveal-ready .reveal {
+  .reveal-ready .reveal:not(.is-in) {
     opacity: 1;
-    transform: none;
-    transition: none;
+  }
+  .reveal-ready .reveal.is-in {
+    animation: none;
   }
   *,
   *::before,
@@ -2757,13 +2762,6 @@ a.lang-link:active {
 .mobile-nav a:active {
   padding-left: 6px;
   color: var(--green);
-}
-
-/* staggered reveal */
-.reveal-ready .reveal {
-  transition-delay: calc(var(--d, 0) * 80ms);
-  transition-duration: 0.7s;
-  transition-timing-function: var(--ease-out);
 }
 
 /* catalog cards */
@@ -3203,6 +3201,10 @@ html:not(.js) .check-path {
 }
 
 /* cross-page transitions where View Transitions are supported */
+::view-transition-group(*) {
+  animation-duration: 0.55s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
 @view-transition {
   navigation: auto;
 }
@@ -3347,5 +3349,38 @@ html:not(.js) .check-path {
   }
   .reveal-ready .words.is-in .wi {
     transform: none;
+  }
+}
+
+/* catalog: the box rises onto its podium as the card appears */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-ready .cat-card.reveal:not(.is-in) .cat-media img {
+    opacity: 0;
+    transform: translateY(32px) scale(0.94);
+  }
+  .reveal-ready .cat-card.reveal .cat-media img {
+    transition:
+      transform 1s var(--ease-out),
+      opacity 0.6s ease;
+    transition-delay: calc(var(--d, 0) * 80ms + 0.12s);
+  }
+  .reveal-ready .cat-card.reveal.is-in:hover .cat-media img {
+    transition-delay: 0s;
+  }
+}
+
+/* catalog: a slight 3D tilt that follows the pointer (mouse only) */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cat-card.is-tilting {
+    transform: perspective(1100px) rotateX(calc(var(--ty, 0) * -3deg)) rotateY(calc(var(--tx, 0) * 4deg))
+      translateY(-6px);
+    transition:
+      transform 0.18s linear,
+      box-shadow 0.45s var(--ease-out),
+      border-color 0.3s;
+  }
+  .cat-card.is-tilting .cat-media img {
+    transform: translate(calc(var(--tx, 0) * -9px), calc(var(--ty, 0) * -6px)) scale(1.05);
+    transition: transform 0.25s var(--ease-out);
   }
 }

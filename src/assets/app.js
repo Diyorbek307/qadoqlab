@@ -393,6 +393,43 @@
     );
   }
 
+  // catalog cards tilt toward the pointer; the rect is taken on enter, before the card tilts
+  if (finePointer && !reduceMotion) {
+    $$('.cat-card').forEach(function (card) {
+      var box = null;
+      card.addEventListener('pointerenter', function () {
+        box = card.getBoundingClientRect();
+      });
+      card.addEventListener('pointermove', function (e) {
+        if (!box) return;
+        card.style.setProperty('--tx', (((e.clientX - box.left) / box.width) * 2 - 1).toFixed(3));
+        card.style.setProperty('--ty', (((e.clientY - box.top) / box.height) * 2 - 1).toFixed(3));
+        card.classList.add('is-tilting');
+      });
+      card.addEventListener('pointerleave', function () {
+        box = null;
+        card.classList.toggle('is-tilting', false);
+      });
+    });
+  }
+
+  // the clicked card's box flies into the box type page (see the generated CSS in the build)
+  if (!reduceMotion) {
+    doc.addEventListener('click', function (e) {
+      var link = e.target.closest && e.target.closest('.cat-card a');
+      if (!link || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+      var card = link.closest('.cat-card');
+      var media = card.querySelector('.cat-media');
+      var picture = card.querySelector('img[data-vt]');
+      if (picture && media && link.getAttribute('href') === media.getAttribute('href')) picture.classList.add('vt-go');
+    });
+    window.addEventListener('pageshow', function () {
+      $$('.vt-go').forEach(function (el) {
+        el.classList.toggle('vt-go', false);
+      });
+    });
+  }
+
   // ripple on press
   if (!reduceMotion) {
     doc.addEventListener(

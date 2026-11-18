@@ -116,9 +116,11 @@ function buildImages() {
     if (key === 'hero') HERO_SVG = svg;
   }
 }
-const img = (key, alt, { eager = false, sizes = '' } = {}) => {
+// `vt` names the picture for cross-page transitions (see the generated CSS in buildAssets).
+const img = (key, alt, { eager = false, sizes = '', vt = '' } = {}) => {
   const m = IMG[key];
-  return `<img src="${m.src}" width="${m.w}" height="${m.h}" alt="${esc(alt)}" ${eager ? 'fetchpriority="high" decoding="async"' : 'loading="lazy" decoding="async"'}${sizes ? ` sizes="${sizes}"` : ''}>`;
+  const loading = eager ? 'fetchpriority="high" decoding="async"' : 'loading="lazy" decoding="async"';
+  return `<img src="${m.src}" width="${m.w}" height="${m.h}" alt="${esc(alt)}" ${loading}${sizes ? ` sizes="${sizes}"` : ''}${vt ? ` data-vt="${esc(vt)}"` : ''}>`;
 };
 
 // --- page shell ---
@@ -347,7 +349,7 @@ function catCard(t, cat, { headingLevel = 3 } = {}) {
   const demoTag =
     DEMO && config.catalogPublished[cat.slug] !== true ? `<span class="tag-demo">${esc(t.demoTag)}</span>` : '';
   return `<article class="cat-card reveal">
-  <a class="cat-media" href="${href(lang, 'category', cat.slug)}" tabindex="-1" aria-hidden="true">${img(cat.art, c.alt)}</a>
+  <a class="cat-media" href="${href(lang, 'category', cat.slug)}" tabindex="-1" aria-hidden="true">${img(cat.art, c.alt, { vt: cat.slug })}</a>
   <div class="cat-body">
     ${demoTag}
     <${h} class="cat-title"><a href="${href(lang, 'category', cat.slug)}">${esc(c.name)}</a></${h}>
@@ -830,7 +832,7 @@ function pageCategory(t, cat) {
       <ul class="check-list">${c.uses.map((u) => `<li>${I.check}<span>${esc(u)}</span></li>`).join('')}</ul>
       <div class="btn-row"><a class="btn btn-primary" href="#request-form" data-track="cta" data-cta="product">${esc(t.cta.calcThis)}${I.arrow}</a></div>
     </div>
-    <figure class="product-figure">${img(cat.art, c.alt, { eager: true })}<figcaption class="illus-caption">${esc(t.illustrationLabel)}</figcaption></figure>
+    <figure class="product-figure">${img(cat.art, c.alt, { eager: true, vt: cat.slug })}<figcaption class="illus-caption">${esc(t.illustrationLabel)}</figcaption></figure>
   </div>
 </section>
 <section class="section section-alt" aria-labelledby="params-title">
@@ -1129,6 +1131,13 @@ function buildAssets() {
     ASSETS.fonts[f] = `/assets/fonts/${name}`;
     css = css.split(`/assets/fonts/${f}`).join(ASSETS.fonts[f]);
   }
+  // Shared-element transitions: the picture on a box type's page always carries a name; a card
+  // gets the same name only when it is clicked (.vt-go, set by app.js), so exactly one box
+  // flies from the card into the page instead of every card on screen.
+  css += catalog
+    .map((c) => `.product-figure [data-vt="${c.slug}"],.vt-go[data-vt="${c.slug}"]{view-transition-name:box-${c.slug}}`)
+    .join('\n');
+
   // Simple minification. A space before ":" is kept: it matters in selectors like ".a :focus".
   const minCss = css
     .replace(/\/\*[\s\S]*?\*\//g, '')
