@@ -44,6 +44,7 @@ const csp = buildCsp({
   scriptHashes: build.scriptHashes,
   trustedTypes: true,
   mailtoForms: true,
+  connectHosts: ['https://api.web3forms.com'], // used only when WEB3FORMS_ACCESS_KEY is set
   https: true, // Render serves every site over HTTPS
 });
 const headers = [

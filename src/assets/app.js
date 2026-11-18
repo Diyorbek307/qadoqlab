@@ -604,8 +604,9 @@
   var statusPromise = null;
   function getStatus() {
     if (statusPromise) return statusPromise;
-    // static hosting: there is no server to ask, the e-mail mode is the only one
-    if (CFG.staticHosting) return (statusPromise = Promise.resolve({ online: false }));
+    // static hosting: there is no server to ask; online only through the mail relay
+    if (CFG.staticHosting)
+      return (statusPromise = Promise.resolve(CFG.relay ? { online: true, uploads: false } : { online: false }));
     statusPromise = new Promise(function (resolve) {
       var done = false;
       var t = setTimeout(function () {
@@ -805,8 +806,8 @@
     return s;
   }
 
-  function buildMailto(form) {
-    var fd = new FormData(form);
+  // The request as plain text: the body of the prepared e-mail and of the relayed one.
+  function requestLines(fd) {
     var M = T.form.mail;
     var lines = [M.greeting, M.intro, ''];
     var add = function (label, v) {
@@ -829,14 +830,64 @@
       lines.push(M.task + ':');
       lines.push(task.slice(0, 1500));
     }
+    return lines;
+  }
+
+  function buildMailto(form) {
     return (
       'mailto:' +
       CFG.email +
       '?subject=' +
       encodeURIComponent(T.mailSubject) +
       '&body=' +
-      encodeURIComponent(lines.join('\n'))
+      encodeURIComponent(requestLines(new FormData(form)).join('\n'))
     );
+  }
+
+  // Static hosting with a relay: Web3Forms mails the request to the company address.
+  function relayPayload(fd) {
+    // the same subject as the server's letter: what is packed, else the start of the task
+    var task = (fd.get('task') || '').toString().trim();
+    var topic =
+      T.types[fd.get('type')] || T.industries[fd.get('industry')] || task.split('\n')[0].slice(0, 60) || T.mailSubject;
+    var data = {
+      access_key: CFG.relay.key,
+      subject: ('Новая заявка QADOQLAB — ' + topic).replace(/\s+/g, ' ').slice(0, 160),
+      from_name: 'QADOQLAB',
+      message: requestLines(fd).join('\n'),
+    };
+    var contact = (fd.get('contact') || '').toString().trim();
+    if (fd.get('channel') === 'email' && RX_EMAIL.test(contact)) data.replyto = contact;
+    if (fd.get('website')) data.botcheck = true; // the honeypot was filled: let the service drop it
+    return data;
+  }
+
+  // Sends the request to our server or to the relay; both answers come back as {status, body}.
+  function postRequest(form, fd) {
+    var req = CFG.relay
+      ? fetch(CFG.relay.url, {
+          method: 'POST',
+          body: JSON.stringify(relayPayload(fd)),
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        })
+      : fetch(form.action, {
+          method: 'POST',
+          body: fd,
+          headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' },
+          credentials: 'same-origin',
+        });
+    return req.then(function (r) {
+      return r
+        .json()
+        .catch(function () {
+          return {};
+        })
+        .then(function (j) {
+          // the relay answers {success: true}; only that counts as delivered
+          if (CFG.relay) j = j && j.success === true ? { ok: true } : { error: 'relay_' + r.status };
+          return { status: r.status, body: j };
+        });
+    });
   }
 
   function setMode(form, status) {
@@ -979,22 +1030,7 @@
       btn.classList.remove('is-sending');
       label.textContent = btn.getAttribute('data-label');
     };
-    fetch(form.action, {
-      method: 'POST',
-      body: fd,
-      headers: { Accept: 'application/json', 'X-Requested-With': 'fetch' },
-      credentials: 'same-origin',
-    })
-      .then(function (r) {
-        return r
-          .json()
-          .catch(function () {
-            return {};
-          })
-          .then(function (j) {
-            return { status: r.status, body: j };
-          });
-      })
+    postRequest(form, fd)
       .then(function (res) {
         finish();
         if (res.status === 200 && res.body && res.body.ok === true) {

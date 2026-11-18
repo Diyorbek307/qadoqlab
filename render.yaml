@@ -16,7 +16,7 @@ services:
     headers:
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'sha256-P2iQqoislY2yJYYx94cOfnGrRmWejIjDrzZpcORFnsU='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; form-action 'self' mailto:; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; require-trusted-types-for 'script'; trusted-types 'none'; upgrade-insecure-requests"
+        value: "default-src 'self'; script-src 'self' 'sha256-P2iQqoislY2yJYYx94cOfnGrRmWejIjDrzZpcORFnsU='; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.web3forms.com; media-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'self'; form-action 'self' mailto:; frame-ancestors 'none'; base-uri 'none'; object-src 'none'; require-trusted-types-for 'script'; trusted-types 'none'; upgrade-insecure-requests"
       - path: /*
         name: X-Content-Type-Options
         value: "nosniff"

@@ -4,15 +4,25 @@
  *   node src/build.js          → dist/       public build, confirmed content only
  *   node src/build.js --demo   → dist-demo/  every category, marked as demo, noindex
  * STATIC_HOSTING=true builds for a host without the Node server (Render static site and
- * the like): forms start in e-mail mode and never call /api.
+ * the like): forms never call /api. With WEB3FORMS_ACCESS_KEY set they send requests
+ * through Web3Forms to the company mailbox; without it they work in e-mail mode.
  */
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
 const ROOT = path.resolve(__dirname, '..');
+const RELAY_URL = 'https://api.web3forms.com/submit';
 const DEMO = process.argv.includes('--demo');
 const STATIC = process.env.STATIC_HOSTING === 'true';
+// Web3Forms access key: public by design (it only routes submissions to the mailbox it was
+// issued for), so it may reach the browser. Still kept out of the repository.
+const RELAY_KEY = (process.env.WEB3FORMS_ACCESS_KEY || '').trim();
+if (RELAY_KEY && !/^[A-Za-z0-9-]{20,64}$/.test(RELAY_KEY)) {
+  console.error('WEB3FORMS_ACCESS_KEY does not look like an access key (expected letters, digits and dashes).');
+  process.exit(1);
+}
+const RELAY = STATIC && RELAY_KEY ? { url: process.env.WEB3FORMS_API_URL || RELAY_URL, key: RELAY_KEY } : null;
 const outArg = (process.argv.find((a) => a.startsWith('--out=')) || '').slice(6);
 const OUT = path.resolve(ROOT, outArg || (DEMO ? 'dist-demo' : 'dist'));
 
@@ -1232,6 +1242,7 @@ function buildAssets() {
   const clientCfg = {
     email: EMAIL,
     staticHosting: STATIC,
+    relay: RELAY,
     maxFiles: config.form.maxFiles,
     maxFileSizeMb: config.form.maxFileSizeMb,
     allowedTypes: config.form.allowedTypes,
@@ -1336,6 +1347,7 @@ function main() {
       {
         demo: DEMO,
         staticHosting: STATIC,
+        relay: Boolean(RELAY),
         indexable: INDEXABLE,
         css: ASSETS.css,
         scriptHashes: [`sha256-${inlineHash}`],

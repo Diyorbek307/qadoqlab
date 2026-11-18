@@ -34,10 +34,11 @@ function buildCsp({
   analytics = {},
   trustedTypes = false,
   mailtoForms = false,
+  connectHosts = [],
   https = settings.https,
 }) {
   const script = ["'self'", ...scriptHashes.map((h) => `'${h}'`)];
-  const connect = ["'self'"];
+  const connect = ["'self'", ...connectHosts];
   const img = ["'self'", 'data:'];
   for (const [id, hosts] of Object.entries(ANALYTICS_HOSTS)) {
     if (!analytics[id]) continue;

@@ -130,11 +130,39 @@ async function main() {
   build(path.join(tmp, 'static'), false, { STATIC_HOSTING: 'true' });
   const staticHost = await startStaticHost(path.join(tmp, 'static'));
 
+  // Stand-in for Web3Forms: answers like the real API, CORS included
+  const relayed = [];
+  let relayAnswer = { success: true, message: 'Email sent successfully!' };
+  const relay = http.createServer((req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    if (req.method === 'OPTIONS') return res.end();
+    let body = '';
+    req.on('data', (c) => {
+      body += c;
+    });
+    req.on('end', () => {
+      relayed.push(JSON.parse(body));
+      res.writeHead(relayAnswer.success ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(relayAnswer));
+    });
+  });
+  await new Promise((r) => relay.listen(0, '127.0.0.1', r));
+  build(path.join(tmp, 'static-relay'), false, {
+    STATIC_HOSTING: 'true',
+    WEB3FORMS_ACCESS_KEY: 'test-access-key-0000-1111',
+    WEB3FORMS_API_URL: `http://127.0.0.1:${relay.address().port}/submit`,
+  });
+  const relayHost = await startStaticHost(path.join(tmp, 'static-relay'));
+
   const browser = await chromium.launch();
   const errors = [];
   const watch = (page) => {
     page.on('pageerror', (e) => errors.push(e.message));
-    page.on('console', (m) => m.type() === 'error' && !/status of (404|502)/.test(m.text()) && errors.push(m.text()));
+    page.on(
+      'console',
+      (m) => m.type() === 'error' && !/status of (400|404|502)/.test(m.text()) && errors.push(m.text()),
+    );
     return page;
   };
   const desktop = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -377,9 +405,41 @@ async function main() {
     'static hosting, no JS: the form goes to the mail app',
   );
 
+  // Static hosting with the relay: a real send, success only after the service confirms it
+  const rp = watch(await desktop.newPage());
+  await rp.goto(`${relayHost}/ru/request/`);
+  check((await rp.getAttribute('#rf', 'data-mode')) === 'online', 'relay: the form sends online');
+  check(!(await rp.isVisible('#rf-files')), 'relay: no file field, photos go by e-mail');
+  await rp.fill('#rf-task', 'Коробки для архива, папки А4');
+  await rp.click('label:has(input[value=email]) >> nth=0');
+  await rp.fill('#rf-contact', 'buyer@example.uz');
+  await rp.click('#rf [data-submit]');
+  await rp.waitForSelector('[data-success-for=rf]:not([hidden])', { timeout: 5000 });
+  const letter = relayed[0] || {};
+  check(
+    relayed.length === 1 &&
+      letter.access_key === 'test-access-key-0000-1111' &&
+      letter.replyto === 'buyer@example.uz' &&
+      letter.subject === 'Новая заявка QADOQLAB — Коробки для архива, папки А4' &&
+      letter.message.includes('Коробки для архива, папки А4') &&
+      !('botcheck' in letter),
+    'relay: the request reaches the service with reply-to and the full text',
+  );
+  relayAnswer = { success: false, message: 'Invalid access key' };
+  await rp.goto(`${relayHost}/uz/request/`);
+  await rp.fill('#rf-task', 'Test');
+  await rp.fill('#rf-contact', '+998 90 123 45 67');
+  await rp.click('#rf [data-submit]');
+  await rp.waitForSelector('#rf .form-status.is-error');
+  check(
+    (await rp.inputValue('#rf-task')) === 'Test' && !(await rp.isVisible('[data-success-for=rf]')),
+    'relay: a refusal shows an error, keeps the data and no success',
+  );
+
   check(errors.length === 0, `no console errors ${JSON.stringify(errors)}`);
   await browser.close();
   mailApi.close();
+  relay.close();
 }
 
 main()
